@@ -3,16 +3,16 @@
 
 namespace s2d {
 
-	bool Simp2DWindow::m_bMouseDrag = false;
-	COORD Simp2DWindow::m_WindowDim = { 0,0 };
-	Simp2DWindow* Simp2DWindow::m_wWindow = nullptr;
-	void(*Simp2DWindow::ButtonOut)(Simp2DWindow*, int msg) = nullptr;
-	void(*Simp2DWindow::KeyCall)(Simp2DWindow* window, unsigned char key, unsigned char keystate) = nullptr;
-	void(*Simp2DWindow::MouseCall)(Simp2DWindow*, float x, float y, unsigned char status, unsigned char mouse) = nullptr;
-	void(*Simp2DWindow::ResizeCall)(int newWidth, int newHeigth) = nullptr;
+	bool S2DWindow::m_bMouseDrag = false;
+	COORD S2DWindow::m_WindowDim = { 0,0 };
+	S2DWindow* S2DWindow::m_wWindow = nullptr;
+	void(*S2DWindow::ButtonOut)(S2DWindow*, int msg) = nullptr;
+	void(*S2DWindow::KeyCall)(S2DWindow* window, unsigned char key, unsigned char keystate) = nullptr;
+	void(*S2DWindow::MouseCall)(S2DWindow*, float x, float y, unsigned char status, unsigned char mouse) = nullptr;
+	void(*S2DWindow::ResizeCall)(int newWidth, int newHeigth) = nullptr;
 
 
-	Simp2DWindow::Simp2DWindow(unsigned int width, unsigned int height, const char* windowname, unsigned long winmode)
+	S2DWindow::S2DWindow(unsigned int width, unsigned int height, const char* windowname, unsigned long winmode)
 	{
 
 		this->m_iHeigth = height;
@@ -37,13 +37,13 @@ namespace s2d {
 		RegisterClass(&m_wWndcls);
 
 		this->m_hWinhwn = CreateWindow(windowname, windowname, winmode, CW_USEDEFAULT, CW_USEDEFAULT, width, height, nullptr, nullptr, m_hInstance, nullptr);
-		Simp2DWindow::m_wWindow = this;
+		S2DWindow::m_wWindow = this;
 		ShowWindow(m_hWinhwn, SW_SHOW);
 
 
 
 	}
-	void Simp2DWindow::ProcessMessage()
+	void S2DWindow::ProcessMessage()
 	{
 
 		PeekMessage(&m_msg, this->m_hWinhwn, 0, 0, PM_REMOVE);
@@ -56,26 +56,26 @@ namespace s2d {
 
 
 	//with blocking
-	void Simp2DWindow::ProcessMessageB() {
+	void S2DWindow::ProcessMessageB() {
 		GetMessage(&m_msg, m_hWinhwn, 0, 0);
 		TranslateMessage(&m_msg);
 		DispatchMessage(&m_msg);
 	}
 
-	void Simp2DWindow::SetResizeWindowCallFunc(void(*resizecall)(int, int)) { ResizeCall = resizecall; }
-	void Simp2DWindow::SetMouseCallFunc(void(*mcall)(Simp2DWindow*, float x, float y, unsigned char, unsigned char)) { Simp2DWindow::MouseCall = mcall; }
+	void S2DWindow::SetResizeWindowCallFunc(void(*resizecall)(int, int)) { ResizeCall = resizecall; }
+	void S2DWindow::SetMouseCallFunc(void(*mcall)(S2DWindow*, float x, float y, unsigned char, unsigned char)) { S2DWindow::MouseCall = mcall; }
 	
 
 
-	Simp2DWindow::Simp2DWindow(){}
+	S2DWindow::S2DWindow(){}
 
-	Simp2DWindow::~Simp2DWindow(){
+	S2DWindow::~S2DWindow(){
 		this->DeleteOpenGLContext();
 	}
 
 
 
-	void Simp2DWindow::CreateOpenGLContext() {
+	void S2DWindow::CreateOpenGLContext() {
 		m_hdc = GetDC(this->m_hWinhwn);
 
 		PIXELFORMATDESCRIPTOR m_pxlform = { 0 };
@@ -111,7 +111,7 @@ namespace s2d {
 
 	}
 
-	void Simp2DWindow::CreateOpenGLContext(unsigned int glMajor, unsigned int glMinor, unsigned int glProfile) {
+	void S2DWindow::CreateOpenGLContext(unsigned int glMajor, unsigned int glMinor, unsigned int glProfile) {
 		CreateOpenGLContext();
 		wglCreateContextAttribsARB = (wglCreateContextAttribsARB_type*)wglGetProcAddress("wglCreateContextAttribsARB");
 		wglChoosePixelFormatARB = (wglChoosePixelFormatARB_type*)wglGetProcAddress("wglChoosePixelFormatARB");
@@ -137,7 +137,7 @@ namespace s2d {
 		RegisterClass(&m_wWndcls);
 
 		this->m_hWinhwn = CreateWindow(windowname, windowname, m_wStyle, CW_USEDEFAULT, CW_USEDEFAULT, width, heigth, nullptr, nullptr, m_hInstance, nullptr);
-		Simp2DWindow::m_wWindow = this;
+		S2DWindow::m_wWindow = this;
 		ShowWindow(m_hWinhwn, SW_SHOW);
 
 		m_hdc = GetDC(this->m_hWinhwn);
@@ -175,24 +175,24 @@ namespace s2d {
 		wglMakeCurrent(m_hdc, m_hglrc);
 	}
 
-	void Simp2DWindow::DeleteOpenGLContext() {
+	void S2DWindow::DeleteOpenGLContext() {
 		wglMakeCurrent(0, 0);
 		wglDeleteContext(m_hglrc);
-		ReleaseDC(Simp2DWindow::m_hWinhwn, m_hdc);
+		ReleaseDC(S2DWindow::m_hWinhwn, m_hdc);
 	}
 
 
 
-	bool Simp2DWindow::WindowShouldClose(){
+	bool S2DWindow::WindowShouldClose(){
 		return m_bQuitstate;
 	}
 
 
 
-	void Simp2DWindow::SwapWindowBuffers(){
+	void S2DWindow::SwapWindowBuffers(){
 		SwapBuffers(m_hdc);
  	}
-	void Simp2DWindow::SetKeyCallFunc(void(*keycallback)(Simp2DWindow*, unsigned char, unsigned char)){
+	void S2DWindow::SetKeyCallFunc(void(*keycallback)(S2DWindow*, unsigned char, unsigned char)){
 		KeyCall = keycallback;
 	}
 
@@ -200,27 +200,39 @@ namespace s2d {
 
 
 
-	void Simp2DWindow::ShowMyWindow(){
+	void S2DWindow::ShowMyWindow(){
 		ShowWindow(this->m_hWinhwn, SW_SHOW);
 	}
 
-	void Simp2DWindow::HideWindow(){
+	void S2DWindow::HideWindow(){
 		ShowWindow(this->m_hWinhwn, SW_HIDE);
+	}
+
+	s2d::KeyState S2DWindow::GetKeyState(){ 
+		s2d::KeyState temp = m_keyState;
+		m_keyState = { 0, S2D_KEY_NO_INPUT };
+		return temp;
+	}
+
+	s2d::MouseState S2DWindow::GetMouseState() {
+		s2d::MouseState temp = m_mouseState;
+		m_mouseState = { S2D_MOUSE_IDLE, S2D_MOUSE_IDLE, {-1.0f, -1.0f} };
+		return temp;
 	}
 
 
 
-	void Simp2DWindow::GetWindowSize(int* width, int* heigth){
+	void S2DWindow::GetWindowSize(int* width, int* heigth){
 		if (width != nullptr && heigth != nullptr){
 			*width = m_iWidth;
 			*heigth = m_iHeigth;
 		}
 	}
 
-	void Simp2DWindow::SetWindowTitle(const char* title){
-		SetWindowText(Simp2DWindow::m_hWinhwn, title);
+	void S2DWindow::SetWindowTitle(const char* title){
+		SetWindowText(S2DWindow::m_hWinhwn, title);
 	}
-	LRESULT CALLBACK Simp2DWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+	LRESULT CALLBACK S2DWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 
 		switch (msg) {
@@ -261,13 +273,16 @@ namespace s2d {
 
 
 		case WM_KEYDOWN:
+			m_wWindow->m_keyState = { (UINT32)wp, S2D_KEY_PRESSED };
 			if (m_wWindow->KeyCall != nullptr)
 				m_wWindow->KeyCall(m_wWindow, (unsigned char)wp, S2D_KEY_PRESSED);
 			break;
 
 		case WM_KEYUP:
+			m_wWindow->m_keyState = { (UINT32)wp, S2D_KEY_RELEASED };
+
 			if (m_wWindow->KeyCall != nullptr)
-				m_wWindow->KeyCall(m_wWindow, (unsigned char)wp, SD2_KEY_RELEASED);
+				m_wWindow->KeyCall(m_wWindow, (unsigned char)wp, S2D_KEY_RELEASED);
 			break;
 
 		case WM_LBUTTONDOWN: {
@@ -277,10 +292,13 @@ namespace s2d {
 				m_wWindow->m_bMouseDrag = true;
 			}
 
+			float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
+			float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+
+			m_wWindow->m_mouseState = { S2D_MOUSE_LEFT, (UINT8)((m_wWindow->m_bMouseDrag) ? S2D_MOUSE_HELD : S2D_MOUSE_CLICK), {fx, fy} };
 			if (MouseCall != nullptr)
 			{
-				float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
-				float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+				
 
 
 				if (m_wWindow->m_bMouseDrag)MouseCall(m_wWindow, fx, fy, S2D_MOUSE_HELD, S2D_MOUSE_LEFT);
@@ -289,28 +307,6 @@ namespace s2d {
 
 		}
 
-		case WM_MOUSEMOVE:
-			if (m_wWindow->m_bMouseDrag) {
-				POINT pt = { LOWORD(lp), HIWORD(lp) };
-				float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
-				float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
-
-				if (MouseCall != nullptr)
-					MouseCall(m_wWindow, fx, fy, S2D_MOUSE_HELD, S2D_MOUSE_LEFT | S2D_MOUSE_RIGHT);
-
-			}
-			break;
-		case WM_LBUTTONUP: {
-			if (m_wWindow->m_bMouseDrag)m_wWindow->m_bMouseDrag = false;
-
-			if (MouseCall != nullptr) {
-				POINT pt = { LOWORD(lp), HIWORD(lp) };
-				float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
-				float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
-				MouseCall(m_wWindow, fx, fy, S2D_MOUSE_RELEASED, S2D_MOUSE_LEFT);
-			}
-		}
-		break;
 		case WM_RBUTTONDOWN: {
 
 			POINT pt = { LOWORD(lp), HIWORD(lp) };
@@ -318,6 +314,12 @@ namespace s2d {
 			{
 				m_wWindow->m_bMouseDrag = true;
 			}
+
+			float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
+			float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+
+			m_wWindow->m_mouseState = { S2D_MOUSE_LEFT, (UINT8)((m_wWindow->m_bMouseDrag) ? S2D_MOUSE_HELD : S2D_MOUSE_CLICK), {fx, fy} };
+
 
 			if (MouseCall != nullptr)
 			{
@@ -328,25 +330,70 @@ namespace s2d {
 			}
 
 		}
-		case WM_RBUTTONUP: {
-			if (m_wWindow->m_bMouseDrag)m_wWindow->m_bMouseDrag = false;
 
-			if (MouseCall != nullptr) {
+
+		case WM_MOUSEMOVE:
+			if (m_wWindow->m_bMouseDrag) {
 				POINT pt = { LOWORD(lp), HIWORD(lp) };
 				float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
 				float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+
+				m_wWindow->m_mouseState = { S2D_MOUSE_LEFT, (UINT8)(S2D_MOUSE_HELD), {fx, fy} };
+
+
+				if (MouseCall != nullptr)
+					MouseCall(m_wWindow, fx, fy, S2D_MOUSE_HELD, S2D_MOUSE_LEFT | S2D_MOUSE_RIGHT);
+
+			}
+			break;
+		case WM_LBUTTONUP: {
+			if (m_wWindow->m_bMouseDrag)m_wWindow->m_bMouseDrag = false;
+
+
+			
+			POINT pt = { LOWORD(lp), HIWORD(lp) };
+			float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
+			float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+
+			m_wWindow->m_mouseState = { S2D_MOUSE_LEFT, (UINT8)(S2D_MOUSE_RELEASED), {fx, fy} };
+
+
+			if (MouseCall != nullptr) {
+			
+				MouseCall(m_wWindow, fx, fy, S2D_MOUSE_RELEASED, S2D_MOUSE_LEFT);
+			}
+		}
+
+
+		break;
+
+		case WM_RBUTTONUP: {
+			if (m_wWindow->m_bMouseDrag)m_wWindow->m_bMouseDrag = false;
+
+
+			POINT pt = { LOWORD(lp), HIWORD(lp) };
+			float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
+			float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+
+			m_wWindow->m_mouseState = { S2D_MOUSE_RIGHT, (UINT8)(S2D_MOUSE_RELEASED), {fx, fy} };
+			if (MouseCall != nullptr) {
+				
 				MouseCall(m_wWindow, fx, fy, S2D_MOUSE_RELEASED, S2D_MOUSE_RIGHT);
 			}
 		}
 
+		
+
 		break;
 		default:
-
-
+			
+			
 			return DefWindowProc(hwnd, msg, wp, lp);
 			break;
 		}
 
+		
+			
 
 
 		return DefWindowProc(hwnd, msg, wp, lp);

@@ -12,7 +12,6 @@ namespace s2d {
 	typedef long long int			INT64;
 	typedef float					FLOAT32;
 	typedef double					FLOAT64;
-
 	typedef int						TEXID;
 
 	typedef struct PIXCOLOR {
@@ -28,31 +27,55 @@ namespace s2d {
 	constexpr PIXCOLOR PXLCLR_WHITE = { 255, 255, 255, 255 };
 	constexpr PIXCOLOR PXLCLR_BLACK = { 0, 0, 0, 255 };
 
-	struct Vec2 {
-		float x, y;
+	struct Vec2f {
+		FLOAT32 x, y;
+	};
+
+	struct Vec4f {
+		FLOAT32 x, y, z, w;
 	};
 
 	struct VertexCol {
-		float r, g, b, a;
+		FLOAT32 r, g, b, a;
 	};
 	struct Vertex {
-		Vec2 pos;
+		Vec2f pos;
 		VertexCol col;
-		Vec2 textCoord;
+		Vec2f textCoord;
 		FLOAT32 texID;
-	};
-	struct Rect {
-		Vertex vertex[4];
 	};
 	struct RectIndexes {
 		UINT32	index[6];
 	};
-
 	struct TextureContext {
 		UINT32* texID;
 		UINT32 count;
 		UINT32 maxCount;
 	};
+
+	struct Texture {
+		TEXID texID;
+		UINT32 width, height;
+		Vec2f texCoords[4];
+	};
+	
+
+	struct Point {
+		FLOAT32 x, y;
+	};
+
+	struct MouseState {
+		UINT8 mouse;
+		UINT8 state;
+		Vec2f pos;
+	};
+
+	struct KeyState {
+		UINT32 key;
+		UINT8 state;
+	};
+
+
 
 
 }
