@@ -2,41 +2,51 @@
 #include "GLSimp2DGraphics.h"
 
 
-s2d::Simp2DGraphics::Simp2DGraphics(UINT32 width, UINT32 height) {
+s2d::S2DGraphics::S2DGraphics(UINT32 width, UINT32 height) {
 	if (!LoadGL())return;
-	m_rectExistCount = 0;
 	m_scrWidth = width;
 	m_scrHeight = height;
-	m_maxRectCount = 64;
+	m_vertexCount = 0;
+	m_maxVertexCount = 64 * 4;
+	m_vertexIndexCount = 0;
 
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_maxTextureSlot);
 	m_textureSlot.count = 0;
 	m_textureSlot.maxCount = m_maxTextureSlot;
 	m_textureSlot.texID = new UINT32[m_maxTextureSlot];
 
-	m_rects = new Rect[m_maxRectCount];
-	
-	for (size_t i = 0; i < m_maxRectCount; i++) {
+	//m_rects = new Rect[m_maxRectCount];
+	m_vertices = new Vertex[m_maxVertexCount];
+
+	for (size_t i = 0; i < m_maxVertexCount; i+= 4) {
+
+		m_vertices[i + 0] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f };
+		m_vertices[i + 1] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f };
+		m_vertices[i + 2] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f };
+		m_vertices[i + 3] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f };
+	}
+
+	/*for (size_t i = 0; i < m_maxRectCount; i++) {
 
 		m_rects[i].vertex[0] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
 		m_rects[i].vertex[1] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
 		m_rects[i].vertex[2] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
 		m_rects[i].vertex[3] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
 			
-	}
+	}*/
 	glGenVertexArrays(1, &m_glVertexObjectID);
 	glBindVertexArray(m_glVertexObjectID);
 	glGenBuffers(1, &m_glVertexBufferID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBufferID);
 	glGenBuffers(1, &m_glIndexBufferID);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBufferID);
-	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Rect)* m_maxRectCount), m_rects, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex)* m_maxVertexCount), m_vertices, GL_DYNAMIC_DRAW);
 	GLsizei stride = sizeof(Vertex);
 	
-	
-	m_indexRect = new RectIndexes[m_maxRectCount];
+	UINT32 indexCount = m_maxVertexCount / 4 * 6;
+	m_indexRect = new RectIndexes[indexCount];
 	UINT32 offset = 0;
-	for (size_t i = 0; i < m_maxRectCount; i++){
+	for (size_t i = 0; i < indexCount; i++){
 
 
 		m_indexRect[i].index[0] = 0 + offset;
@@ -48,7 +58,7 @@ s2d::Simp2DGraphics::Simp2DGraphics(UINT32 width, UINT32 height) {
 		offset += 4;
 	}
 	
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * m_maxRectCount), m_indexRect, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * indexCount), m_indexRect, GL_STATIC_DRAW);
 
 	delete[] m_indexRect;
 
@@ -61,7 +71,7 @@ s2d::Simp2DGraphics::Simp2DGraphics(UINT32 width, UINT32 height) {
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
-	std::string vertexShaderCode = 
+	const char * vertexShaderCode = 
 		"#version 330 core\n"
 		"layout (location = 0) in vec2 pos;\n"
 		"layout (location = 1) in vec4 col;\n"
@@ -84,7 +94,7 @@ s2d::Simp2DGraphics::Simp2DGraphics(UINT32 width, UINT32 height) {
 		"}\0";
 
 
-	std::string pixelShaderCode =
+		const char * pixelShaderCode =
 		"#version 330 core\n"
 		"out vec4 FragColor;\n"
 		"in vec4 oCol;\n"
@@ -103,14 +113,11 @@ s2d::Simp2DGraphics::Simp2DGraphics(UINT32 width, UINT32 height) {
 		"	FragColor = finalCol;\n"
 		"}\n";
 
-	unsigned int px = glCreateShader(GL_FRAGMENT_SHADER), vx = glCreateShader(GL_VERTEX_SHADER);
-	const char* p = &pixelShaderCode.c_str()[0];
-	glShaderSource(px, 1, &p, nullptr);
-	const char* a = &vertexShaderCode.c_str()[0];
-	glShaderSource(vx, 1, &a, nullptr);
+	UINT32 px = glCreateShader(GL_FRAGMENT_SHADER), vx = glCreateShader(GL_VERTEX_SHADER);
+	
+	glShaderSource(px, 1, &pixelShaderCode, nullptr);
+	glShaderSource(vx, 1, &vertexShaderCode, nullptr);
 	glCompileShader(px);
-	
-	
 	glCompileShader(vx);
 
 	m_glShaderProgID = glCreateProgram();
@@ -122,31 +129,35 @@ s2d::Simp2DGraphics::Simp2DGraphics(UINT32 width, UINT32 height) {
 
 	glUseProgram(m_glShaderProgID);
 	
-	int error = glGetError();
+	
 	m_glUniformLoc = glGetUniformLocation(m_glShaderProgID, "textSampler");
 	
 	glDeleteShader(px);
 	glDeleteShader(vx);
 	
 
+	int temp[32] = { 0,1 };
 
-	
+	for (int i = 0; i < 32; i++) {
+		temp[i] = i;
+	}
+	glUniform1iv(m_glUniformLoc, 32, temp);
+
 	if(wglSwapIntervalEXT != nullptr)
 		wglSwapIntervalEXT(0);
 
 	
 }
 
-s2d::Simp2DGraphics::Simp2DGraphics() :Simp2DGraphics(50, 50) {}
+s2d::S2DGraphics::S2DGraphics() :S2DGraphics(50, 50) {}
 
-s2d::Simp2DGraphics::Simp2DGraphics(Simp2DGraphics& copy){
-	m_maxRectCount		= copy.m_maxRectCount;
+s2d::S2DGraphics::S2DGraphics(S2DGraphics& copy){
 	m_glVertexBufferID	= copy.m_glVertexBufferID;
 	m_glVertexObjectID	= copy.m_glVertexObjectID;
 	m_glIndexBufferID	= copy.m_glIndexBufferID;
 	m_glShaderProgID	= copy.m_glShaderProgID;
-	m_glVertexCount		= copy.m_glVertexCount;
-	m_rectExistCount	= copy.m_rectExistCount;
+	m_vertexCount		= copy.m_vertexCount;
+	m_maxVertexCount	= copy.m_maxVertexCount;
 	m_maxTextureSlot	= copy.m_maxTextureSlot;
 	m_glUniformLoc		= copy.m_glUniformLoc;
 	m_scrHeight			= copy.m_scrHeight;
@@ -158,79 +169,80 @@ s2d::Simp2DGraphics::Simp2DGraphics(Simp2DGraphics& copy){
 	int size = m_textureSlot.maxCount * sizeof(UINT32);
 	memcpy_s(m_textureSlot.texID, size, copy.m_textureSlot.texID, size);
 
-	size = m_rectExistCount * sizeof(Rect);
-	memcpy_s(m_rects, size, copy.m_rects, size);
+	size = m_maxVertexCount * sizeof(Vertex);
+	memcpy_s(m_vertices, size, copy.m_vertices, size);
 }
 
-s2d::Simp2DGraphics::Simp2DGraphics(Simp2DGraphics&& move){
-	m_maxRectCount			= move.m_maxRectCount;
+s2d::S2DGraphics::S2DGraphics(S2DGraphics&& move){
+	
 	m_glVertexBufferID		= move.m_glVertexBufferID;
 	m_glVertexObjectID		= move.m_glVertexObjectID;
 	m_glIndexBufferID		= move.m_glIndexBufferID;
 	m_glShaderProgID		= move.m_glShaderProgID;
-	m_glVertexCount			= move.m_glVertexCount;
-	m_rectExistCount		= move.m_rectExistCount;
+	m_vertexCount			= move.m_vertexCount;
 	m_maxTextureSlot		= move.m_maxTextureSlot;
+	m_maxVertexCount		= move.m_maxVertexCount;
 	m_glUniformLoc			= move.m_glUniformLoc;
 	m_scrHeight				= move.m_scrHeight;
 	m_scrWidth				= move.m_scrWidth;
 	m_textureSlot			= move.m_textureSlot;
-	m_rects					= move.m_rects;
+	m_vertices				= move.m_vertices;
 	move.m_textureSlot.texID = nullptr;
-	move.m_rects = nullptr;
+	move.m_vertices = nullptr;
 }
 
-s2d::Simp2DGraphics::Simp2DGraphics(s2d::Simp2DWindow& window)
+s2d::S2DGraphics::S2DGraphics(s2d::S2DWindow& window)
 {
 	window.CreateOpenGLContext();
 	window.GetWindowSize((int*) & m_scrWidth, (int*) & m_scrHeight);
-	*this = std::move(Simp2DGraphics(m_scrWidth, m_scrHeight));
+	*this = std::move(S2DGraphics(m_scrWidth, m_scrHeight));
 }
 
 
 
-s2d::Simp2DGraphics::~Simp2DGraphics(){
-	if(m_rects!=nullptr)
-		delete[] m_rects;
-	m_rects = nullptr;
+s2d::S2DGraphics::~S2DGraphics(){
+	if(m_vertices!=nullptr)
+		delete[] m_vertices;
+	m_vertices = nullptr;
 
 	if(m_textureSlot.texID != nullptr)
 		delete[] m_textureSlot.texID;
 	m_textureSlot.texID = nullptr;
 }
 
-s2d::Simp2DGraphics& s2d::Simp2DGraphics::operator=(Simp2DGraphics&& move) noexcept
+s2d::S2DGraphics& s2d::S2DGraphics::operator=(S2DGraphics&& move) noexcept
 {
-	m_maxRectCount = move.m_maxRectCount;
-	m_glVertexBufferID = move.m_glVertexBufferID;
-	m_glVertexObjectID = move.m_glVertexObjectID;
-	m_glIndexBufferID = move.m_glIndexBufferID;
-	m_glShaderProgID = move.m_glShaderProgID;
-	m_glVertexCount = move.m_glVertexCount;
-	m_rectExistCount = move.m_rectExistCount;
-	m_maxTextureSlot = move.m_maxTextureSlot;
-	m_glUniformLoc = move.m_glUniformLoc;
-	m_scrHeight = move.m_scrHeight;
-	m_scrWidth = move.m_scrWidth;
-	m_textureSlot = move.m_textureSlot;
-	m_rects = move.m_rects;
+	m_glVertexBufferID		= move.m_glVertexBufferID;
+	m_glVertexObjectID		= move.m_glVertexObjectID;
+	m_glIndexBufferID		= move.m_glIndexBufferID;
+	m_glShaderProgID		= move.m_glShaderProgID;
+	m_vertexCount			= move.m_vertexCount;
+	m_maxTextureSlot		= move.m_maxTextureSlot;
+	m_maxVertexCount		= move.m_maxVertexCount;
+	m_glUniformLoc			= move.m_glUniformLoc;
+	m_scrHeight				= move.m_scrHeight;
+	m_scrWidth				= move.m_scrWidth;
+	m_textureSlot			= move.m_textureSlot;
+	m_vertices				= move.m_vertices;
 	move.m_textureSlot.texID = nullptr;
-	move.m_rects = nullptr;
+	move.m_vertices = nullptr;
 	return *this;
 }
 
-void s2d::Simp2DGraphics::resizeRectCount() {
+void s2d::S2DGraphics::resizeRectCount() {
 
-    m_maxRectCount += 32;
-	Rect* temp = new Rect[m_maxRectCount];
-	memcpy_s(temp, m_maxRectCount * sizeof(Rect), m_rects, m_maxRectCount * sizeof(Rect) - 32);
-	delete[] m_rects;
-    m_rects = temp;
-	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(m_maxRectCount * sizeof(Rect)), m_rects,GL_DYNAMIC_DRAW);
-
-	m_indexRect = new RectIndexes[m_maxRectCount];
+    m_maxVertexCount += 32 * 4;
+	Vertex* temp = new Vertex[m_maxVertexCount];
+	memcpy_s(temp, m_maxVertexCount * sizeof(Vertex), m_vertices, (m_maxVertexCount - 32*4) * sizeof(Vertex));
+	delete[] m_vertices;
+    m_vertices = temp;
+	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(m_maxVertexCount * sizeof(Vertex)), m_vertices,GL_DYNAMIC_DRAW);
+	UINT32 indexCount = m_maxVertexCount / 4 * 6;
+	m_indexRect = new RectIndexes[indexCount];
 	UINT32 offset = 0;
-	for (size_t i = 0; i < m_maxRectCount; i++) {
+	for (size_t i = 0; i < indexCount; i++) {
+
+
 		m_indexRect[i].index[0] = 0 + offset;
 		m_indexRect[i].index[1] = 1 + offset;
 		m_indexRect[i].index[2] = 2 + offset;
@@ -239,17 +251,20 @@ void s2d::Simp2DGraphics::resizeRectCount() {
 		m_indexRect[i].index[5] = 2 + offset;
 		offset += 4;
 	}
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * m_maxRectCount), m_indexRect, GL_STATIC_DRAW);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * indexCount), m_indexRect, GL_STATIC_DRAW);
 
 	delete[] m_indexRect;
-
+	m_indexRect = nullptr;
 }
 
 
 
-s2d::TEXID s2d::Simp2DGraphics::createTexture(unsigned char* pixels, int width, int height)
-{
-	if (m_textureSlot.count >= m_textureSlot.maxCount)return -1;
+s2d::Texture s2d::S2DGraphics::createTexture(unsigned char* pixels, int width, int height) {
+	if (m_textureSlot.count >= m_textureSlot.maxCount)return { -1,0,0 };
+	
+	
+	
 	int index = m_textureSlot.count;
 	glGenTextures(1, &m_textureSlot.texID[index]);
 	
@@ -263,24 +278,77 @@ s2d::TEXID s2d::Simp2DGraphics::createTexture(unsigned char* pixels, int width, 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	m_textureSlot.count++;
 
-	int temp[32] = {0,1};
+	//int temp[32] = {1,2};
 
-	for (int i = 0; i < m_textureSlot.count; i++) {
-		temp[i] = i;
-	}
-	glUniform1iv(m_glUniformLoc, m_textureSlot.count, temp);
+	//for (int i = 1; i < m_textureSlot.count + 1; i++) {
+		//temp[i] = i;
+	//}
+	//glUniform1iv(m_glUniformLoc, 2, temp);
 
-	
-	return m_textureSlot.texID[index];
+	Texture texture = { m_textureSlot.count - 1, width, height };
+	return texture;
 
 }
 
-void s2d::Simp2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 height, PIXCOLOR color, TEXID texID)
-{
-	if (m_rectExistCount >= m_maxRectCount - 1) resizeRectCount();
-	if (m_rects == nullptr)return;
+void s2d::S2DGraphics::setBlendingState(bool state) {
+	if (state) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		return;
+	}
 
-	UINT32 index = m_rectExistCount;
+	glDisable(GL_BLEND);
+}
+
+void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, PIXCOLOR color, Texture texture){
+	if (m_vertexCount >= m_maxVertexCount - 1) resizeRectCount();
+	UINT32 index = m_vertexCount;
+	Point normalP1 = { (float)((float)(p1.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p1.y / (float)m_scrWidth) * 2) - 1 };
+	Point normalP2 = { (float)((float)(p2.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p2.y / (float)m_scrWidth) * 2) - 1 };
+	Point normalP3 = { (float)((float)(p3.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p3.y / (float)m_scrWidth) * 2) - 1 };
+
+	Vec2f pos[4] = {};
+
+	if (texture.texID > 0) {
+
+		//pos[0] = { 0.0f,0.0f };
+		//pos[1] = { 0.0f,1.0f };
+		//pos[2] = { 1.0f,1.0f };
+		//pos[3] = { 1.0f,0.0f };
+
+		pos[0] = texture.texCoords[0];
+		pos[1] = texture.texCoords[1];
+		pos[2] = texture.texCoords[2];
+		pos[3] = texture.texCoords[3];
+
+
+
+	}
+	else {
+		pos[0] = { -1.0f,-1.0f };
+		pos[1] = { -1.0f,-1.0f };
+		pos[2] = { -1.0f,-1.0f };
+		pos[3] = { -1.0f,-1.0f };
+	}
+
+
+	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
+
+
+	m_vertices[index + 0] = { {normalP1.x, normalP1.y},	fR, fG, fB, fA, pos[0], (float)texture.texID };
+	m_vertices[index + 1] = { {normalP2.x, normalP2.y},	fR, fG, fB, fA, pos[1], (float)texture.texID };
+	m_vertices[index + 2] = { {normalP3.x, normalP3.y},	fR, fG, fB, fA, pos[2], (float)texture.texID };
+	m_vertices[index + 3] = { {normalP2.x, normalP2.y},	fR, fG, fB, fA, pos[1], (float)texture.texID };
+	m_vertexCount += 4;
+	m_vertexIndexCount += 6;
+}
+
+void s2d::S2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 height, PIXCOLOR color, Texture texture)
+{
+	
+	if (m_vertexCount >= m_maxVertexCount - 1) resizeRectCount();
+
+	UINT32 index = m_vertexCount;
 	
 	float fx = (float)((float)(x / (float)m_scrWidth) * 2) - 1;
 	float fy = (float)((float)(y / (float)m_scrHeight) * 2) - 1;
@@ -289,14 +357,20 @@ void s2d::Simp2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 
 	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
 	
 
-	Vec2 pos[4] = {};
+	Vec2f pos[4] = {};
 	
-	if (texID > 0) {
+	if (texture.texID > 0) {
 
-		pos[0] = { 0.0f,0.0f };
-		pos[1] = { 0.0f,1.0f };
-		pos[2] = { 1.0f,1.0f };
-		pos[3] = { 1.0f,0.0f };
+		//pos[0] = { 0.0f,0.0f };
+		//pos[1] = { 0.0f,1.0f };
+		//pos[2] = { 1.0f,1.0f };
+		//pos[3] = { 1.0f,0.0f };
+
+		pos[0] = texture.texCoords[0];
+		pos[1] = texture.texCoords[1];
+		pos[2] = texture.texCoords[2];
+		pos[3] = texture.texCoords[3];
+
 	}
 	else {
 		pos[0] = { -1.0f,-1.0f };
@@ -307,24 +381,38 @@ void s2d::Simp2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 
 
 
 
-	m_rects[index].vertex[0] = { fx,	fy,		fR, fG, fB, fA, pos[0], (float)texID };
-	m_rects[index].vertex[1] = { fx,	fOffY,	fR, fG, fB, fA, pos[1], (float)texID };
-	m_rects[index].vertex[2] = { fOffX, fOffY,	fR, fG, fB, fA, pos[2], (float)texID };
-	m_rects[index].vertex[3] = { fOffX, fy,		fR, fG, fB, fA, pos[3], (float)texID };
+	m_vertices[index + 0] = { fx,		fy,			fR, fG, fB, fA, pos[0], (float)texture.texID };
+	m_vertices[index + 1] = { fx,		fOffY,		fR, fG, fB, fA, pos[1], (float)texture.texID };
+	m_vertices[index + 2] = { fOffX,	fOffY,		fR, fG, fB, fA, pos[2], (float)texture.texID };
+	m_vertices[index + 3] = { fOffX,	fy,			fR, fG, fB, fA, pos[3], (float)texture.texID };
 	
-	m_rectExistCount++;
 	
+	m_vertexCount += 4;
+	m_vertexIndexCount += 6;
+}
+
+void s2d::S2DGraphics::drawRect(S2DRect rect, PIXCOLOR color)
+{
+	s2d::Vec4f v = rect.getRect();
+	drawRect(v.x, v.y, v.z, v.w, color, rect.getTexture());
 }
 
 
 
-void s2d::Simp2DGraphics::flushBuffer() {
+void s2d::S2DGraphics::flushBuffer() {
 	
+	
+
 	glClear(GL_COLOR_BUFFER_BIT);
-	if (m_rectExistCount > 0)
-		glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)(sizeof(Rect) * m_rectExistCount), m_rects);
-	glDrawElements(GL_TRIANGLES, 6 * m_rectExistCount, GL_UNSIGNED_INT, nullptr);
-	m_rectExistCount = 0;
-	
+	glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)(sizeof(Vertex) * m_vertexCount), m_vertices);
+	glDrawElements(GL_TRIANGLES, m_vertexIndexCount, GL_UNSIGNED_INT, nullptr);
+	m_vertexCount = 0;
+	m_vertexIndexCount = 0;
+}
+
+void s2d::S2DGraphics::setVSYNC(bool state)
+{
+	if (wglSwapIntervalEXT != nullptr)
+		(state) ? wglSwapIntervalEXT(0) : wglSwapIntervalEXT(1);
 }
  
