@@ -38,6 +38,15 @@ void s2d::S2DRect::rotateRect(FLOAT32 fAngleDeg){
 	y = y + sinf(fAngleDeg);
 }
 
+const s2d::S2DRect& s2d::S2DRect::getRotatedRect(FLOAT32 fAngleDeg)
+{
+	S2DRect rect = *this;
+
+	rect.x = x + cosf(fAngleDeg);
+	rect.y = y + sinf(fAngleDeg);
+	return rect;
+}
+
 void s2d::S2DRect::scaleRect(FLOAT32 multiplier) {
 	w *= multiplier;
 	h *= multiplier;

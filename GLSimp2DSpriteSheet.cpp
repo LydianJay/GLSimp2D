@@ -52,9 +52,35 @@ const s2d::Texture& s2d::S2DSpriteSheet::getTexture(UINT32 row, UINT32 col)
 
     float fOffsetX = (float)( m_texWidth / (float)m_width),
         fOffsetY = (float)( m_texHeight / (float)m_height);
+   
+    
+    //upside down
+    //texture.texCoords[0] = { fX + fOffsetX, fY + fOffsetY };
+    //texture.texCoords[1] = { fX + fOffsetX, fY };
+    //texture.texCoords[2] = { fX, fY };
+    //texture.texCoords[3] = { fX, fY + fOffsetY };
+
+    
+    //texture.texCoords[0] = { fX, fY + fOffsetY };
+    //texture.texCoords[1] = { fX, fY };
+    //texture.texCoords[2] = { fX + fOffsetX, fY };
+    //texture.texCoords[3] = { fX + fOffsetX, fY + fOffsetY };
+
+    
+    //normal
     texture.texCoords[0] = { fX, fY };
     texture.texCoords[1] = { fX, fY + fOffsetY };
     texture.texCoords[2] = { fX + fOffsetX, fY + fOffsetY };
     texture.texCoords[3] = { fX + fOffsetX, fY };
+   
     return texture;
+}
+
+unsigned short s2d::S2DSpriteSheet::getRowCount()
+{
+    return m_rowCount;
+}
+
+unsigned short s2d::S2DSpriteSheet::getColCount(){
+    return m_columnCount;
 }

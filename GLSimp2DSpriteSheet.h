@@ -14,7 +14,8 @@ namespace s2d {
 
 		void createSpriteSheet(Texture& texture, UINT32 segmentW, UINT32 segmentH);
 		const s2d::Texture& getTexture(UINT32 row, UINT32 col);
-		
+		UINT16				getRowCount();
+		UINT16				getColCount();
 	private:
 
 		s2d::TEXID m_texID;

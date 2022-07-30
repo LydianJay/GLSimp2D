@@ -13,6 +13,7 @@ namespace s2d {
 		void moveRect(FLOAT32 x, FLOAT32 y);
 		void setSize(FLOAT32 w, FLOAT32 h);
 		void rotateRect(FLOAT32 fAngleDeg);
+		const S2DRect& getRotatedRect(FLOAT32 fAngleDeg);
 		void scaleRect(FLOAT32 multiplier);
 		void setTexture(Texture& texture);
 		const Texture& getTexture();

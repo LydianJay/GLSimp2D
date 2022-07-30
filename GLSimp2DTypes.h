@@ -75,6 +75,10 @@ namespace s2d {
 		UINT8 state;
 	};
 
+	enum class TEXTURE_ORIENTATION {
+		ROT_L, ROT_R, INVERT_H, INVERT_V
+	};
+
 
 
 

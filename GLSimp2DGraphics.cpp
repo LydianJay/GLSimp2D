@@ -286,6 +286,12 @@ s2d::Texture s2d::S2DGraphics::createTexture(unsigned char* pixels, int width, i
 	//glUniform1iv(m_glUniformLoc, 2, temp);
 
 	Texture texture = { m_textureSlot.count - 1, width, height };
+
+	texture.texCoords[0] = { 0.0f, 0.0f };
+	texture.texCoords[1] = { 0.0f, 1.0f };
+	texture.texCoords[2] = { 1.0f, 1.0f };
+	texture.texCoords[3] = { 1.0f, 0.0f };
+
 	return texture;
 
 }
@@ -348,18 +354,20 @@ void s2d::S2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 hei
 	
 	if (m_vertexCount >= m_maxVertexCount - 1) resizeRectCount();
 
+	y = m_scrHeight - y;
+
 	UINT32 index = m_vertexCount;
 	
 	float fx = (float)((float)(x / (float)m_scrWidth) * 2) - 1;
 	float fy = (float)((float)(y / (float)m_scrHeight) * 2) - 1;
 	float fOffX = (float)((float)((x + width) / (float)m_scrWidth) * 2) - 1;
-	float fOffY = (float)((float)((y + height) / (float)m_scrHeight) * 2) - 1;
+	float fOffY = (float)((float)((y - height) / (float)m_scrHeight) * 2) - 1;
 	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
 	
 
 	Vec2f pos[4] = {};
 	
-	if (texture.texID > 0) {
+	if (texture.texID >= 0) {
 
 		//pos[0] = { 0.0f,0.0f };
 		//pos[1] = { 0.0f,1.0f };
