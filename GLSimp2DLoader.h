@@ -1,6 +1,18 @@
 #pragma once
 #include "Simp2DCommon.h"
 
+/*
+	-------------------------------------------------------------------------
+
+	This header defines some openGL declarations and constants
+	
+
+
+	--------------------------------------------------------------------------
+
+*/
+
+
 
 #define GL_ARRAY_BUFFER 0x8892
 #define GL_DYNAMIC_DRAW 0x88E8
@@ -23,8 +35,20 @@ typedef unsigned int *	GLsizeiptr;
 typedef int*			GLintptr;
 typedef char			GLchar;
 
+
+/*
+* Loads an openGL function
+* @param name - the function name
+* @return - returns the address of that function
+*/
 static void * get_proc_address(const char *name);
+
+/*
+* Loads all gl function declared in this header
+* @return - returns false if one of them does not load
+*/
 bool LoadGL();
+
 extern void(__stdcall* glGenBuffers)(GLsizei n, GLuint* buffers);
 extern void(__stdcall* glBindBuffer)(GLenum target, GLuint buffer);
 extern void(__stdcall* glBufferData)(GLenum target, GLsizeiptr size, const void* data, GLenum usage);

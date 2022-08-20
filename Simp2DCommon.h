@@ -9,6 +9,8 @@
 	#error "For C++ Windows only!!!"
 #endif
 
+
+// i prefer to ANSI :>
 #ifdef UNICODE
 	#undef UNICODE
 #endif
@@ -22,7 +24,7 @@
 #include <Windows.h>
 #include <gl\GL.h>
 #include <gl\GLU.h>
-#include <vector>
-#include <string>
+#include <vector>		// NOTE TO SELF: Migth be a good idea to implement ur own arraylist
+#include <string>		
 
 

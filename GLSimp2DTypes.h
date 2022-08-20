@@ -1,5 +1,12 @@
 #pragma once
 
+
+/*
+* NOTES TO SELF:
+*	-This types has been already defined in some libaries... rename this shit or remove
+* 
+*/
+
 namespace s2d {
 
 	typedef unsigned char			UINT8;
@@ -10,39 +17,39 @@ namespace s2d {
 	typedef short					INT16;
 	typedef int						INT32;
 	typedef long long int			INT64;
-	typedef float					FLOAT32;
+	typedef float					F32;
 	typedef double					FLOAT64;
 	typedef int						TEXID;
 
-	typedef struct PIXCOLOR {
+	struct S2D_COLOR {
 		UINT8	R;
 		UINT8	G;
 		UINT8	B;
 		UINT8	A;
 	};
 
-	constexpr PIXCOLOR PXLCLR_BLUE = { 0, 0, 255, 255};
-	constexpr PIXCOLOR PXLCLR_RED =	{ 255, 0, 0, 255 };
-	constexpr PIXCOLOR PXLCLR_GREEN = { 0, 255, 0, 255 };
-	constexpr PIXCOLOR PXLCLR_WHITE = { 255, 255, 255, 255 };
-	constexpr PIXCOLOR PXLCLR_BLACK = { 0, 0, 0, 255 };
+	constexpr S2D_COLOR PXLCLR_BLUE = { 0, 0, 255, 255};
+	constexpr S2D_COLOR PXLCLR_RED =	{ 255, 0, 0, 255 };
+	constexpr S2D_COLOR PXLCLR_GREEN = { 0, 255, 0, 255 };
+	constexpr S2D_COLOR PXLCLR_WHITE = { 255, 255, 255, 255 };
+	constexpr S2D_COLOR PXLCLR_BLACK = { 0, 0, 0, 255 };
 
 	struct Vec2f {
-		FLOAT32 x, y;
+		F32 x, y;
 	};
 
 	struct Vec4f {
-		FLOAT32 x, y, z, w;
+		F32 x, y, z, w;
 	};
 
 	struct VertexCol {
-		FLOAT32 r, g, b, a;
+		F32 r, g, b, a;
 	};
 	struct Vertex {
 		Vec2f pos;
 		VertexCol col;
 		Vec2f textCoord;
-		FLOAT32 texID;
+		F32 texID;
 	};
 	struct RectIndexes {
 		UINT32	index[6];
@@ -61,7 +68,7 @@ namespace s2d {
 	
 
 	struct Point {
-		FLOAT32 x, y;
+		F32 x, y;
 	};
 
 	struct MouseState {
@@ -74,7 +81,6 @@ namespace s2d {
 		UINT32 key;
 		UINT8 state;
 	};
-
 
 
 

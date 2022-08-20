@@ -3,7 +3,17 @@
 #ifndef RENDER_SYS_H
 #define RENDER_SYS_H
 
-
+/* ------------------------------------------------
+* This is the win32 api window manager
+* 
+* NOTES:
+* 
+*	-make this class cannot be copied but can be moved
+*	-input sucks... fix it
+*	
+* 
+* ---------------------------------------------
+*/
 
 
 
@@ -19,8 +29,8 @@
 #define S2D_KEY_RELEASED	0b00010000
 #define S2D_KEY_NO_INPUT	0b00000000
 
-#define S2D_NO_RESIZE WS_VISIBLE | WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU
-#define S2D_DEF_WINDOW WS_VISIBLE | WS_OVERLAPPEDWINDOW
+#define S2D_WINDOW_NO_RESIZE WS_VISIBLE | WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU
+#define S2D_WINDOW_DEFAULT WS_VISIBLE | WS_OVERLAPPEDWINDOW
 
 typedef HGLRC WINAPI wglCreateContextAttribsARB_type(HDC hdc, HGLRC hShareContext, const int *attribList);
 typedef BOOL WINAPI wglChoosePixelFormatARB_type(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
@@ -49,16 +59,46 @@ namespace s2d {
 	
 
 	public:
-
+		/*
+		* @param width, height - the width and height of the window
+		* @param windowname - window title
+		* @param winmode - this specifies if window is resizable or not. USE S2D_WINDOW_NO_RESIZE or S2D_WINDOW_DEFAULT
+		* 
+		*/
 		S2DWindow(unsigned int width, unsigned int height, const char* windowname, unsigned long winmode);
 		S2DWindow();
 		~S2DWindow();
+		/*
+		* Process the window messages with no blocking
+		* @param none
+		* @retrun none
+		*/
 		void ProcessMessage();
+		/*
+		* Process the window message but only when window is active
+		*/
 		void ProcessMessageB();
+		/*
+		* Returns true if window has been closed
+		*/
 		bool WindowShouldClose();
+		/*
+		* Swaps window buffers
+		*/
 		void SwapWindowBuffers();
+		/*
+		* sets the key callback function that will received inputs from keyboard
+		* @param keycallback - the callback function
+		*/
 		void SetKeyCallFunc(void(*keycallback)(S2DWindow*, unsigned char, unsigned char));
+		/*
+		* Sets the callback function that accepts the new window size when it has been resized
+		* @param resizecall - the resize callback accepts 2 ints which is the new width and height
+		*/
 		void SetResizeWindowCallFunc(void(*resizecall)(int, int));
+		/*
+		* Sets the callback for the mouse
+		*/
 		void SetMouseCallFunc(void(*mcall) (S2DWindow*, float x, float y, unsigned char, unsigned char));
 		void SetWindowTitle(const char* title);
 		void GetWindowSize(int*, int*);
@@ -68,6 +108,12 @@ namespace s2d {
 		s2d::MouseState GetMouseState();
 		/*----------for openGL-----------*/
 		void CreateOpenGLContext();
+		/*
+		* Create an opengl context and make it current
+		* @param glMajor - the version major
+		* @param glMinor - the version minor
+		* @param glProfile - the context profile - compat/core
+		*/
 		void CreateOpenGLContext(unsigned int glMajor, unsigned int glMinor, unsigned int glProfile);
 		void DeleteOpenGLContext();
 		/*-------------------------------*/

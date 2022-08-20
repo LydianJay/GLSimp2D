@@ -323,8 +323,7 @@ namespace s2d {
 
 			if (MouseCall != nullptr)
 			{
-				float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
-				float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
+				
 				if (m_wWindow->m_bMouseDrag)MouseCall(m_wWindow, fx, fy, S2D_MOUSE_HELD, S2D_MOUSE_RIGHT);
 				else MouseCall(m_wWindow, fx, fy, S2D_MOUSE_CLICK, S2D_MOUSE_RIGHT);
 			}
@@ -386,8 +385,6 @@ namespace s2d {
 
 		break;
 		default:
-			
-			
 			return DefWindowProc(hwnd, msg, wp, lp);
 			break;
 		}

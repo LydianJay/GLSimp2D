@@ -1,23 +1,37 @@
 #pragma once
 #include "GLSimp2DTypes.h"
 #include <cmath>
+
+/*
+* Defines the Shapes that are supported by this Framework
+* 
+* 
+* 
+*/
+
+
 namespace s2d {
 
 	class S2DRect {
 	public:
 
-		S2DRect(FLOAT32 x, FLOAT32 y, FLOAT32 w, FLOAT32 h);
+		S2DRect(F32 x, F32 y, F32 w, F32 h);
 		S2DRect();
+		/*
+		* 
+		* @return - returns the position and size
+		*/
 		Vec4f getRect();
-		void setRect(FLOAT32 x, FLOAT32 y, FLOAT32 w, FLOAT32 h);
-		void moveRect(FLOAT32 x, FLOAT32 y);
-		void setSize(FLOAT32 w, FLOAT32 h);
-		void rotateRect(FLOAT32 fAngleDeg);
-		void scaleRect(FLOAT32 multiplier);
+		Vec2f getPos();
+		Vec2f getSize();
+		void setRect(F32 x, F32 y, F32 w, F32 h);
+		void moveRect(F32 x, F32 y);
+		void setSize(F32 w, F32 h);
+		void scaleRect(F32 multiplier);
 		void setTexture(Texture& texture);
 		const Texture& getTexture();
 	private:
-		FLOAT32 x, y, w, h;
+		F32 x, y, w, h;
 		Texture	m_texture;
 	};
 
