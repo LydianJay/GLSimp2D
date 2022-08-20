@@ -13,13 +13,22 @@ namespace s2d {
 		S2DSpriteSheet();
 
 		void createSpriteSheet(Texture& texture, UINT32 segmentW, UINT32 segmentH);
-		const s2d::Texture& getTexture(UINT32 row, UINT32 col);
-		
+		/*
+		* Get the textue at specified row and colomn
+		* @param row - the row
+		* @param col - the column
+		* @param isFlipped - specifies if the texture should be flipped vertically
+		* @return - the texture
+		*/
+		const s2d::Texture& getTexture(UINT32 row, UINT32 col, bool isFlipped = false);
+		const s2d::Texture& getTexture(UINT32 index, bool isFlipped = false);
+		UINT16				getRowCount();
+		UINT16				getColCount();
 	private:
 
 		s2d::TEXID m_texID;
 		UINT32 m_width, m_height;
-		FLOAT32 m_texWidth, m_texHeight;
+		float m_texWidth, m_texHeight;
 		UINT32 m_texCount;
 		UINT16	m_rowCount, m_columnCount;
 		

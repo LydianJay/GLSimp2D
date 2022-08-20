@@ -229,34 +229,37 @@ s2d::S2DGraphics& s2d::S2DGraphics::operator=(S2DGraphics&& move) noexcept
 	return *this;
 }
 
-void s2d::S2DGraphics::resizeRectCount() {
+//void s2d::S2DGraphics::resizeRectCount() {
+//
+//    m_maxVertexCount += 32 * 4;
+//	Vertex* temp = new Vertex[m_maxVertexCount];
+//	memcpy_s(temp, m_maxVertexCount * sizeof(Vertex), m_vertices, (m_maxVertexCount - 32*4) * sizeof(Vertex));
+//	delete[] m_vertices;
+//    m_vertices = temp;
+//	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(m_maxVertexCount * sizeof(Vertex)), m_vertices,GL_DYNAMIC_DRAW);
+//	UINT32 indexCount = m_maxVertexCount / 4 * 6;
+//	m_indexRect = new RectIndexes[indexCount];
+//	UINT32 offset = 0;
+//	for (size_t i = 0; i < indexCount; i++) {
+//
+//
+//		m_indexRect[i].index[0] = 0 + offset;
+//		m_indexRect[i].index[1] = 1 + offset;
+//		m_indexRect[i].index[2] = 2 + offset;
+//		m_indexRect[i].index[3] = 0 + offset;
+//		m_indexRect[i].index[4] = 3 + offset;
+//		m_indexRect[i].index[5] = 2 + offset;
+//		offset += 4;
+//	}
+//
+//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * indexCount), m_indexRect, GL_STATIC_DRAW);
+//
+//	delete[] m_indexRect;
+//	m_indexRect = nullptr;
+//}
 
-    m_maxVertexCount += 32 * 4;
-	Vertex* temp = new Vertex[m_maxVertexCount];
-	memcpy_s(temp, m_maxVertexCount * sizeof(Vertex), m_vertices, (m_maxVertexCount - 32*4) * sizeof(Vertex));
-	delete[] m_vertices;
-    m_vertices = temp;
-	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(m_maxVertexCount * sizeof(Vertex)), m_vertices,GL_DYNAMIC_DRAW);
-	UINT32 indexCount = m_maxVertexCount / 4 * 6;
-	m_indexRect = new RectIndexes[indexCount];
-	UINT32 offset = 0;
-	for (size_t i = 0; i < indexCount; i++) {
 
 
-		m_indexRect[i].index[0] = 0 + offset;
-		m_indexRect[i].index[1] = 1 + offset;
-		m_indexRect[i].index[2] = 2 + offset;
-		m_indexRect[i].index[3] = 0 + offset;
-		m_indexRect[i].index[4] = 3 + offset;
-		m_indexRect[i].index[5] = 2 + offset;
-		offset += 4;
-	}
-
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * indexCount), m_indexRect, GL_STATIC_DRAW);
-
-	delete[] m_indexRect;
-	m_indexRect = nullptr;
-}
 
 
 
@@ -286,6 +289,12 @@ s2d::Texture s2d::S2DGraphics::createTexture(unsigned char* pixels, int width, i
 	//glUniform1iv(m_glUniformLoc, 2, temp);
 
 	Texture texture = { m_textureSlot.count - 1, width, height };
+
+	texture.texCoords[0] = { 0.0f, 0.0f };
+	texture.texCoords[1] = { 0.0f, 1.0f };
+	texture.texCoords[2] = { 1.0f, 1.0f };
+	texture.texCoords[3] = { 1.0f, 0.0f };
+
 	return texture;
 
 }
@@ -300,8 +309,9 @@ void s2d::S2DGraphics::setBlendingState(bool state) {
 	glDisable(GL_BLEND);
 }
 
-void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, PIXCOLOR color, Texture texture){
-	if (m_vertexCount >= m_maxVertexCount - 1) resizeRectCount();
+// Not working with textures
+void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color, Texture texture){
+	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
 	UINT32 index = m_vertexCount;
 	Point normalP1 = { (float)((float)(p1.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p1.y / (float)m_scrWidth) * 2) - 1 };
 	Point normalP2 = { (float)((float)(p2.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p2.y / (float)m_scrWidth) * 2) - 1 };
@@ -343,28 +353,140 @@ void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, PIXCOLOR color
 	m_vertexIndexCount += 6;
 }
 
-void s2d::S2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 height, PIXCOLOR color, Texture texture)
+
+
+
+
+void s2d::S2DGraphics::drawRect(F32 x, F32 y, F32 width, F32 height, S2D_COLOR color, Texture texture)
 {
 	
-	if (m_vertexCount >= m_maxVertexCount - 1) resizeRectCount();
+	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
 
-	UINT32 index = m_vertexCount;
+	y = m_scrHeight - y;
 	
-	float fx = (float)((float)(x / (float)m_scrWidth) * 2) - 1;
-	float fy = (float)((float)(y / (float)m_scrHeight) * 2) - 1;
-	float fOffX = (float)((float)((x + width) / (float)m_scrWidth) * 2) - 1;
-	float fOffY = (float)((float)((y + height) / (float)m_scrHeight) * 2) - 1;
+	UINT32 index = m_vertexCount;
 	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
 	
+	Vec2f fP = normalizePoint({ x, y });
+	Vec2f fOff = normalizePoint({ x + width, y - height });
+
 
 	Vec2f pos[4] = {};
 	
-	if (texture.texID > 0) {
+	if (texture.texID >= 0) {
+		pos[0] = texture.texCoords[0];
+		pos[1] = texture.texCoords[1];
+		pos[2] = texture.texCoords[2];
+		pos[3] = texture.texCoords[3];
 
-		//pos[0] = { 0.0f,0.0f };
-		//pos[1] = { 0.0f,1.0f };
-		//pos[2] = { 1.0f,1.0f };
-		//pos[3] = { 1.0f,0.0f };
+	}
+	else {
+		pos[0] = { -1.0f,-1.0f };
+		pos[1] = { -1.0f,-1.0f };
+		pos[2] = { -1.0f,-1.0f };
+		pos[3] = { -1.0f,-1.0f };
+	}
+
+	m_vertices[index + 0] = { fP,						fR, fG, fB, fA, pos[0], (float)texture.texID };
+	m_vertices[index + 1] = { {fP.x,	fOff.y},		fR, fG, fB, fA, pos[1], (float)texture.texID };
+	m_vertices[index + 2] = { {fOff.x,	fOff.y},		fR, fG, fB, fA, pos[2], (float)texture.texID };
+	m_vertices[index + 3] = { {fOff.x,	fP.y},			fR, fG, fB, fA, pos[3], (float)texture.texID };
+	m_vertexCount += 4;
+	m_vertexIndexCount += 6;
+}
+
+s2d::Vec2f s2d::S2DGraphics::normalizePoint(s2d::Vec2f point) {
+	return { ( point.x / (float)m_scrWidth * 2.0f) - 1.0f,(point.y / (float)m_scrHeight * 2.0f) - 1.0f };
+}
+
+void s2d::S2DGraphics::drawRect(S2DRect rect, S2D_COLOR color) {
+	s2d::Vec4f v = rect.getRect();
+	drawRect(v.x, v.y, v.z, v.w, color, rect.getTexture());
+}
+
+s2d::Vec2f s2d::S2DGraphics::rotatePoint(s2d::Vec2f point, s2d::Vec2f m, float fAngle) {
+	fAngle = fAngle * 3.14159f / 180.0;
+	float s = sinf(fAngle);
+	float c = cosf(fAngle);
+	point = {point.x - m.x, point.y - m.y};
+	return { (point.x * c - point.y * s) + m.x , (point.x * s + point.y * c) + m.y};
+
+}
+
+void s2d::S2DGraphics::drawRotatedRect(F32 x, F32 y, F32 width, F32 height, float fAngle, S2D_COLOR color, Texture texture) {
+
+	
+	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
+	
+	y = m_scrHeight - y;
+
+	UINT32 index = m_vertexCount;
+
+	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
+
+	Vec2f pos[4] = {};
+
+	if (texture.texID >= 0) {
+		
+		pos[0] = texture.texCoords[0];
+		pos[1] = texture.texCoords[1];
+		pos[2] = texture.texCoords[2];
+		pos[3] = texture.texCoords[3];
+
+	}
+	else {
+		pos[0] = { -1.0f,-1.0f };
+		pos[1] = { -1.0f,-1.0f };
+		pos[2] = { -1.0f,-1.0f };
+		pos[3] = { -1.0f,-1.0f };
+	}
+
+	Vec2f fP = normalizePoint({ x, y });
+	Vec2f fOff = normalizePoint({ x + width, y - height });
+	
+	float w = abs(fOff.x - fP.x), h = abs(fOff.y - fP.y);
+	float hw = w / 2;
+	float hh = h / 2;
+	
+	Vec2f m = {fP.x + hw, fP.y - hh};
+	
+	Vec2f v[4] = {
+		fP,
+		{fP.x,		fOff.y},
+		{fOff.x,	fOff.y},
+		{fOff.x,	fP.y}
+	};
+	
+	for (int i = 0; i < 4; i++) {
+		m_vertices[index + i] = { rotatePoint(v[i], m, fAngle), fR, fG, fB, fA, pos[i], (float)texture.texID };
+	}
+	
+	m_vertexCount += 4;
+	m_vertexIndexCount += 6;
+
+
+}
+
+void s2d::S2DGraphics::drawRotatedRect(S2DRect rect, float fAnge, S2D_COLOR color) {
+
+	Vec4f pos = rect.getRect();
+
+	drawRotatedRect(pos.x, pos.y, pos.z, pos.w, fAnge, color, rect.getTexture());
+
+}
+
+void s2d::S2DGraphics::drawNDCRect(float x, float y, float w, float h, S2D_COLOR color, Texture texture) {
+	
+
+	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
+
+	UINT32 index = m_vertexCount;
+
+	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
+
+	Vec2f pos[4] = {};
+
+	if (texture.texID >= 0) {
 
 		pos[0] = texture.texCoords[0];
 		pos[1] = texture.texCoords[1];
@@ -379,30 +501,29 @@ void s2d::S2DGraphics::drawRect(FLOAT32 x, FLOAT32 y, FLOAT32 width, FLOAT32 hei
 		pos[3] = { -1.0f,-1.0f };
 	}
 
+	Vec2f vertexPos[4] = {
+		{x, y},
+		{x,	y + h},
+		{x - w,	y + h},
+		{x - w, y}
+	};
 
+	for (uint32_t i = 0; i < 4; i++) {
 
-	m_vertices[index + 0] = { fx,		fy,			fR, fG, fB, fA, pos[0], (float)texture.texID };
-	m_vertices[index + 1] = { fx,		fOffY,		fR, fG, fB, fA, pos[1], (float)texture.texID };
-	m_vertices[index + 2] = { fOffX,	fOffY,		fR, fG, fB, fA, pos[2], (float)texture.texID };
-	m_vertices[index + 3] = { fOffX,	fy,			fR, fG, fB, fA, pos[3], (float)texture.texID };
-	
-	
+		m_vertices[index + i] = { vertexPos[i], fR, fG, fB, fA, pos[0], (float)texture.texID};
+	}
 	m_vertexCount += 4;
 	m_vertexIndexCount += 6;
+
 }
 
-void s2d::S2DGraphics::drawRect(S2DRect rect, PIXCOLOR color)
-{
-	s2d::Vec4f v = rect.getRect();
-	drawRect(v.x, v.y, v.z, v.w, color, rect.getTexture());
+void s2d::S2DGraphics::drawNDCRect(S2DRect rect, S2D_COLOR color, Texture texture) {
+	drawNDCRect(rect.getPos().x, rect.getPos().y, rect.getSize().x, rect.getSize().y, color, texture);
 }
 
 
 
 void s2d::S2DGraphics::flushBuffer() {
-	
-	
-
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)(sizeof(Vertex) * m_vertexCount), m_vertices);
 	glDrawElements(GL_TRIANGLES, m_vertexIndexCount, GL_UNSIGNED_INT, nullptr);
@@ -410,9 +531,38 @@ void s2d::S2DGraphics::flushBuffer() {
 	m_vertexIndexCount = 0;
 }
 
-void s2d::S2DGraphics::setVSYNC(bool state)
-{
+void s2d::S2DGraphics::setVSYNC(bool state) {
 	if (wglSwapIntervalEXT != nullptr)
 		(state) ? wglSwapIntervalEXT(0) : wglSwapIntervalEXT(1);
+}
+
+void s2d::S2DGraphics::reservedMaxRect(uint32_t count) {
+
+	if (count <= m_maxVertexCount)return;
+	m_maxVertexCount += count * 4;
+	Vertex* temp = new Vertex[m_maxVertexCount];
+	memcpy_s(temp, m_maxVertexCount * sizeof(Vertex), m_vertices, (m_maxVertexCount - count * 4) * sizeof(Vertex));
+	delete[] m_vertices;
+	m_vertices = temp;
+	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(m_maxVertexCount * sizeof(Vertex)), m_vertices, GL_DYNAMIC_DRAW);
+	UINT32 indexCount = m_maxVertexCount / 4 * 6;
+	m_indexRect = new RectIndexes[indexCount];
+	UINT32 offset = 0;
+	for (size_t i = 0; i < indexCount; i++) {
+
+
+		m_indexRect[i].index[0] = 0 + offset;
+		m_indexRect[i].index[1] = 1 + offset;
+		m_indexRect[i].index[2] = 2 + offset;
+		m_indexRect[i].index[3] = 0 + offset;
+		m_indexRect[i].index[4] = 3 + offset;
+		m_indexRect[i].index[5] = 2 + offset;
+		offset += 4;
+	}
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * indexCount), m_indexRect, GL_STATIC_DRAW);
+
+	delete[] m_indexRect;
+	m_indexRect = nullptr;
 }
  
