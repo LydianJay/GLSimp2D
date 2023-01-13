@@ -40,26 +40,26 @@ namespace s2d {
 		S2DWindow::m_wWindow = this;
 		ShowWindow(m_hWinhwn, SW_SHOW);
 
-
+		
 
 	}
 	void S2DWindow::ProcessMessage()
 	{
 
-		PeekMessage(&m_msg, this->m_hWinhwn, 0, 0, PM_REMOVE);
-		TranslateMessage(&m_msg);
-		DispatchMessage(&m_msg);
-
-		/*if (m_msg.message == WM_QUIT)
-			m_wWindow->m_bQuitstate = true;*/
+		if (PeekMessage(&m_msg, this->m_hWinhwn, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&m_msg);
+			DispatchMessage(&m_msg);
+		}
 	}
 
 
 	//with blocking
 	void S2DWindow::ProcessMessageB() {
-		GetMessage(&m_msg, m_hWinhwn, 0, 0);
-		TranslateMessage(&m_msg);
-		DispatchMessage(&m_msg);
+
+		if (GetMessage(&m_msg, m_hWinhwn, 0, 0)) {
+			TranslateMessage(&m_msg);
+			DispatchMessage(&m_msg);
+		}
 	}
 
 	void S2DWindow::SetResizeWindowCallFunc(void(*resizecall)(int, int)) { ResizeCall = resizecall; }
@@ -306,6 +306,7 @@ namespace s2d {
 			}
 
 		}
+		break;
 
 		case WM_RBUTTONDOWN: {
 
@@ -318,7 +319,7 @@ namespace s2d {
 			float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
 			float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
 
-			m_wWindow->m_mouseState = { S2D_MOUSE_LEFT, (UINT8)((m_wWindow->m_bMouseDrag) ? S2D_MOUSE_HELD : S2D_MOUSE_CLICK), {fx, fy} };
+			m_wWindow->m_mouseState = { S2D_MOUSE_RIGHT, (UINT8)((m_wWindow->m_bMouseDrag) ? S2D_MOUSE_HELD : S2D_MOUSE_CLICK), {fx, fy} };
 
 
 			if (MouseCall != nullptr)
@@ -330,14 +331,14 @@ namespace s2d {
 
 		}
 
-
+		break;
 		case WM_MOUSEMOVE:
 			if (m_wWindow->m_bMouseDrag) {
 				POINT pt = { LOWORD(lp), HIWORD(lp) };
 				float fx = pt.x + (20 * (float)pt.x / m_wWindow->m_iWidth);
 				float fy = pt.y + (40 * (float)pt.y / m_wWindow->m_iHeigth);
 
-				m_wWindow->m_mouseState = { S2D_MOUSE_LEFT, (UINT8)(S2D_MOUSE_HELD), {fx, fy} };
+				m_wWindow->m_mouseState = { S2D_MOUSE_LEFT | S2D_MOUSE_RIGHT, (UINT8)(S2D_MOUSE_HELD), {fx, fy} };
 
 
 				if (MouseCall != nullptr)

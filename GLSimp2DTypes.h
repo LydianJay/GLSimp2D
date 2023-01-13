@@ -33,9 +33,12 @@ namespace s2d {
 	constexpr S2D_COLOR PXLCLR_GREEN = { 0, 255, 0, 255 };
 	constexpr S2D_COLOR PXLCLR_WHITE = { 255, 255, 255, 255 };
 	constexpr S2D_COLOR PXLCLR_BLACK = { 0, 0, 0, 255 };
-
+	struct Point;
 	struct Vec2f {
 		F32 x, y;
+		Vec2f();
+		Vec2f(float _x, float _y);
+		Vec2f(Point p);
 	};
 
 	struct Vec4f {
@@ -69,6 +72,15 @@ namespace s2d {
 
 	struct Point {
 		F32 x, y;
+		Point();
+		Point(float _x, float _y);
+		Point(Vec2f v);
+		void decX(float a);
+		void decY(float a);
+		void dec(float _x, float _y);
+		void incX(float a);
+		void incY(float a);
+		void inc(float _x, float _y);
 	};
 
 	struct MouseState {
@@ -83,7 +95,7 @@ namespace s2d {
 	};
 
 
-
+	Point operator-(Point a, Point b);
 }
 
-
+ 

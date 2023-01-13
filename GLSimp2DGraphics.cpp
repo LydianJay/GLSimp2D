@@ -15,7 +15,7 @@ s2d::S2DGraphics::S2DGraphics(UINT32 width, UINT32 height) {
 	m_textureSlot.maxCount = m_maxTextureSlot;
 	m_textureSlot.texID = new UINT32[m_maxTextureSlot];
 
-	//m_rects = new Rect[m_maxRectCount];
+	
 	m_vertices = new Vertex[m_maxVertexCount];
 
 	for (size_t i = 0; i < m_maxVertexCount; i+= 4) {
@@ -26,14 +26,7 @@ s2d::S2DGraphics::S2DGraphics(UINT32 width, UINT32 height) {
 		m_vertices[i + 3] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f };
 	}
 
-	/*for (size_t i = 0; i < m_maxRectCount; i++) {
-
-		m_rects[i].vertex[0] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
-		m_rects[i].vertex[1] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
-		m_rects[i].vertex[2] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
-		m_rects[i].vertex[3] = { {0.0f, 0.0f},		{0.0f, 0.0f, 0.0f, 0.0f}, {-1.0f, -1.0f}, -1.0f};
-			
-	}*/
+	
 	glGenVertexArrays(1, &m_glVertexObjectID);
 	glBindVertexArray(m_glVertexObjectID);
 	glGenBuffers(1, &m_glVertexBufferID);
@@ -173,7 +166,7 @@ s2d::S2DGraphics::S2DGraphics(S2DGraphics& copy){
 	memcpy_s(m_vertices, size, copy.m_vertices, size);
 }
 
-s2d::S2DGraphics::S2DGraphics(S2DGraphics&& move){
+s2d::S2DGraphics::S2DGraphics(S2DGraphics&& move) noexcept{
 	
 	m_glVertexBufferID		= move.m_glVertexBufferID;
 	m_glVertexObjectID		= move.m_glVertexObjectID;
@@ -187,8 +180,11 @@ s2d::S2DGraphics::S2DGraphics(S2DGraphics&& move){
 	m_scrWidth				= move.m_scrWidth;
 	m_textureSlot			= move.m_textureSlot;
 	m_vertices				= move.m_vertices;
+	m_indexRect				= move.m_indexRect;
+	m_vertexIndexCount		= move.m_vertexIndexCount;
 	move.m_textureSlot.texID = nullptr;
 	move.m_vertices = nullptr;
+	move.m_indexRect = nullptr;
 }
 
 s2d::S2DGraphics::S2DGraphics(s2d::S2DWindow& window)
@@ -224,42 +220,14 @@ s2d::S2DGraphics& s2d::S2DGraphics::operator=(S2DGraphics&& move) noexcept
 	m_scrWidth				= move.m_scrWidth;
 	m_textureSlot			= move.m_textureSlot;
 	m_vertices				= move.m_vertices;
+	m_indexRect = move.m_indexRect;
+	m_vertexIndexCount = move.m_vertexIndexCount;
 	move.m_textureSlot.texID = nullptr;
 	move.m_vertices = nullptr;
+	move.m_indexRect = nullptr;
+	
 	return *this;
 }
-
-//void s2d::S2DGraphics::resizeRectCount() {
-//
-//    m_maxVertexCount += 32 * 4;
-//	Vertex* temp = new Vertex[m_maxVertexCount];
-//	memcpy_s(temp, m_maxVertexCount * sizeof(Vertex), m_vertices, (m_maxVertexCount - 32*4) * sizeof(Vertex));
-//	delete[] m_vertices;
-//    m_vertices = temp;
-//	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(m_maxVertexCount * sizeof(Vertex)), m_vertices,GL_DYNAMIC_DRAW);
-//	UINT32 indexCount = m_maxVertexCount / 4 * 6;
-//	m_indexRect = new RectIndexes[indexCount];
-//	UINT32 offset = 0;
-//	for (size_t i = 0; i < indexCount; i++) {
-//
-//
-//		m_indexRect[i].index[0] = 0 + offset;
-//		m_indexRect[i].index[1] = 1 + offset;
-//		m_indexRect[i].index[2] = 2 + offset;
-//		m_indexRect[i].index[3] = 0 + offset;
-//		m_indexRect[i].index[4] = 3 + offset;
-//		m_indexRect[i].index[5] = 2 + offset;
-//		offset += 4;
-//	}
-//
-//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(RectIndexes) * indexCount), m_indexRect, GL_STATIC_DRAW);
-//
-//	delete[] m_indexRect;
-//	m_indexRect = nullptr;
-//}
-
-
-
 
 
 
@@ -280,13 +248,6 @@ s2d::Texture s2d::S2DGraphics::createTexture(unsigned char* pixels, int width, i
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	m_textureSlot.count++;
-
-	//int temp[32] = {1,2};
-
-	//for (int i = 1; i < m_textureSlot.count + 1; i++) {
-		//temp[i] = i;
-	//}
-	//glUniform1iv(m_glUniformLoc, 2, temp);
 
 	Texture texture = { m_textureSlot.count - 1, width, height };
 
@@ -310,45 +271,18 @@ void s2d::S2DGraphics::setBlendingState(bool state) {
 }
 
 // Not working with textures
-void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color, Texture texture){
+void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color){
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
 	UINT32 index = m_vertexCount;
 	Point normalP1 = { (float)((float)(p1.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p1.y / (float)m_scrWidth) * 2) - 1 };
 	Point normalP2 = { (float)((float)(p2.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p2.y / (float)m_scrWidth) * 2) - 1 };
 	Point normalP3 = { (float)((float)(p3.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p3.y / (float)m_scrWidth) * 2) - 1 };
 
-	Vec2f pos[4] = {};
-
-	if (texture.texID > 0) {
-
-		//pos[0] = { 0.0f,0.0f };
-		//pos[1] = { 0.0f,1.0f };
-		//pos[2] = { 1.0f,1.0f };
-		//pos[3] = { 1.0f,0.0f };
-
-		pos[0] = texture.texCoords[0];
-		pos[1] = texture.texCoords[1];
-		pos[2] = texture.texCoords[2];
-		pos[3] = texture.texCoords[3];
-
-
-
-	}
-	else {
-		pos[0] = { -1.0f,-1.0f };
-		pos[1] = { -1.0f,-1.0f };
-		pos[2] = { -1.0f,-1.0f };
-		pos[3] = { -1.0f,-1.0f };
-	}
-
-
 	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
-
-
-	m_vertices[index + 0] = { {normalP1.x, normalP1.y},	fR, fG, fB, fA, pos[0], (float)texture.texID };
-	m_vertices[index + 1] = { {normalP2.x, normalP2.y},	fR, fG, fB, fA, pos[1], (float)texture.texID };
-	m_vertices[index + 2] = { {normalP3.x, normalP3.y},	fR, fG, fB, fA, pos[2], (float)texture.texID };
-	m_vertices[index + 3] = { {normalP2.x, normalP2.y},	fR, fG, fB, fA, pos[1], (float)texture.texID };
+	m_vertices[index + 0] = { {normalP1.x, normalP1.y},	fR, fG, fB, fA, { -1.0f,-1.0f }, -1.0f };
+	m_vertices[index + 1] = { {normalP2.x, normalP2.y},	fR, fG, fB, fA, { -1.0f,-1.0f }, -1.0f };
+	m_vertices[index + 2] = { {normalP3.x, normalP3.y},	fR, fG, fB, fA, { -1.0f,-1.0f }, -1.0f };
+	m_vertices[index + 3] = { {normalP2.x, normalP2.y},	fR, fG, fB, fA, { -1.0f,-1.0f }, -1.0f };
 	m_vertexCount += 4;
 	m_vertexIndexCount += 6;
 }
@@ -461,6 +395,8 @@ void s2d::S2DGraphics::drawRotatedRect(F32 x, F32 y, F32 width, F32 height, floa
 		m_vertices[index + i] = { rotatePoint(v[i], m, fAngle), fR, fG, fB, fA, pos[i], (float)texture.texID };
 	}
 	
+
+
 	m_vertexCount += 4;
 	m_vertexIndexCount += 6;
 
@@ -475,51 +411,144 @@ void s2d::S2DGraphics::drawRotatedRect(S2DRect rect, float fAnge, S2D_COLOR colo
 
 }
 
-void s2d::S2DGraphics::drawNDCRect(float x, float y, float w, float h, S2D_COLOR color, Texture texture) {
+void s2d::S2DGraphics::drawWireFrameCircle(Point p1, float fRadius, float lw, S2D_COLOR color, uint32_t nSegmentCount) {
+
 	
+	float p = (3.14159f * 2.0f) / (float)nSegmentCount;
+	float& r = fRadius;
+	Point start = { cosf(0) * r + p1.x, sinf(0) * r + p1.y };
+	Point s;
+	for (uint32_t i = 1; i <= nSegmentCount; i++) {
+		Point s = { cosf(i * p) * r + p1.x , sinf(i * p) * r + p1.y };
+		drawLine(start, s, lw);
+		start = s;
+	}
+
+}
+
+void s2d::S2DGraphics::drawCircle(Point p1, float fRadius, S2D_COLOR color, uint32_t nSegmentCount) {
+
 
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
+	p1.y = m_scrHeight - p1.y;
+	
+	if (nSegmentCount <= 4) nSegmentCount = 6;
+	if (nSegmentCount % 2 != 0) nSegmentCount += 1;
+
+	while (m_vertexCount + ((nSegmentCount/2)*4) >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
 
 	UINT32 index = m_vertexCount;
 
 	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
 
-	Vec2f pos[4] = {};
 
-	if (texture.texID >= 0) {
+	float p = (3.14159f * 2.0f) / (float)nSegmentCount;
+	float& r = fRadius;
+	Point start = { cosf(0) * r + p1.x, sinf(0) * r + p1.y };
+	Point s;
+	
+	uint32_t t = 0;
+	for (uint32_t i = 0; i < nSegmentCount; i+=2) {
 
-		pos[0] = texture.texCoords[0];
-		pos[1] = texture.texCoords[1];
-		pos[2] = texture.texCoords[2];
-		pos[3] = texture.texCoords[3];
+		Point p2 = { cosf(i * p) * r + p1.x , sinf(i * p) * r + p1.y };
+		Point p3 = { cosf( (i + 1) * p) * r + p1.x , sinf( (i + 1) * p) * r + p1.y };
+		Point p4 = { cosf( (i + 2) * p) * r + p1.x , sinf( (i + 2) * p) * r + p1.y };
 
+		m_vertices[index + t] = { normalizePoint(p1),		fR, fG, fB, fA, { -1.0f, -1.0f }, -1.0f };
+		m_vertices[index + t + 1] = { normalizePoint(p2),	fR, fG, fB, fA, { -1.0f, -1.0f }, -1.0f };
+		m_vertices[index + t + 2] = { normalizePoint(p3),	fR, fG, fB, fA, { -1.0f, -1.0f }, -1.0f };
+		m_vertices[index + t + 3] = { normalizePoint(p4),	fR, fG, fB, fA, {-1.0f, -1.0f}, -1.0f };
+		t += 4;
 	}
-	else {
-		pos[0] = { -1.0f,-1.0f };
-		pos[1] = { -1.0f,-1.0f };
-		pos[2] = { -1.0f,-1.0f };
-		pos[3] = { -1.0f,-1.0f };
-	}
 
-	Vec2f vertexPos[4] = {
-		{x, y},
-		{x,	y + h},
-		{x - w,	y + h},
-		{x - w, y}
-	};
+	m_vertexCount += (nSegmentCount / 2) * 4;
+	m_vertexIndexCount += (nSegmentCount / 2) * 6;
+}
 
-	for (uint32_t i = 0; i < 4; i++) {
+void s2d::S2DGraphics::drawLine(float x1, float y1, float x2, float y2, float w, S2D_COLOR color) {
 
-		m_vertices[index + i] = { vertexPos[i], fR, fG, fB, fA, pos[0], (float)texture.texID};
-	}
+	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
+	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
+	
+	y1 = m_scrHeight - y1;
+	y2 = m_scrHeight - y2;
+
+	UINT32 index = m_vertexCount;
+	Vec2f vec = { x2 - x1, y2 - y1 };
+	float m = sqrtf(pow(vec.x, 2) + pow(vec.y, 2)); // magnitude
+	Vec2f unitVec = { vec.x / m, vec.y / m };
+	unitVec = rotatePoint(unitVec, { 0,0 }, 90.0f);
+	Vec2f p3 = { (w * unitVec.x) + x1,  (w * unitVec.y) + y1 };
+	Vec2f p4 = { (w * unitVec.x) + x2,  (w * unitVec.y) + y2 };
+	Vec2f p1 = normalizePoint({ x1, y1 });
+	Vec2f p2 = normalizePoint({ x2, y2 });
+	p3 = normalizePoint(p3);
+	p4 = normalizePoint(p4);
+
+	m_vertices[index + 0] = { p1,	fR, fG, fB, fA, {-1.0f, -1.0f}, -1.0f };
+	m_vertices[index + 1] = { p3,	fR, fG, fB, fA, {-1.0f, -1.0f}, -1.0f };
+	m_vertices[index + 2] = { p4,	fR, fG, fB, fA, {-1.0f, -1.0f}, -1.0f };
+	m_vertices[index + 3] = { p2,	fR, fG, fB, fA, {-1.0f, -1.0f}, -1.0f };
+
+
 	m_vertexCount += 4;
 	m_vertexIndexCount += 6;
 
 }
 
-void s2d::S2DGraphics::drawNDCRect(S2DRect rect, S2D_COLOR color, Texture texture) {
-	drawNDCRect(rect.getPos().x, rect.getPos().y, rect.getSize().x, rect.getSize().y, color, texture);
+void s2d::S2DGraphics::drawLine(Point p1, Point p2, float w, S2D_COLOR color) {
+	if (w <= 0.0f) w = 1.0f;
+	drawLine(p1.x, p1.y, p2.x, p2.y, w, color);
 }
+
+void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, S2D_COLOR color) {
+	if (lw <= 0.0f) lw = 1.0f;
+	Point p1 = pos;
+	Point p2 = { pos.x + sz.x, pos.y };
+	Point p3 = { pos.x, pos.y + sz.y };
+	Point p4 = { pos.x + sz.x, pos.y + sz.y };
+
+	drawLine(p1, p2, lw, color);
+	drawLine({ p2.x - lw, p2.y }, { p4.x - lw, p4.y }, lw, color);
+	drawLine({ p4.x - lw, p4.y - lw }, { p3.x + lw, p3.y - lw}, lw, color);
+	drawLine({ p3.x + lw, p3.y }, { p1.x + lw, p1.y }, lw, color);
+}
+
+void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, float f, S2D_COLOR color) {
+	if (lw <= 0.0f) lw = 1.0f;
+	Point p1 = pos;
+	Point p2 = { pos.x + sz.x, pos.y };
+	Point p3 = { pos.x, pos.y + sz.y };
+	Point p4 = { pos.x + sz.x, pos.y + sz.y };
+	Vec2f m = { p1.x + (sz.x / 2.0f), p1.y + (sz.y / 2.0f) };
+
+	drawLine( rotatePoint(p1, m, f), rotatePoint(p2, m, f), lw, color);
+	drawLine( rotatePoint( { p2.x - lw, p2.y }, m, f), rotatePoint({ p4.x - lw, p4.y }, m, f), lw, color);
+	drawLine( rotatePoint({ p4.x - lw, p4.y - lw }, m, f), rotatePoint({ p3.x + lw, p3.y - lw },m,f), lw, color);
+	drawLine( rotatePoint({ p3.x + lw, p3.y }, m, f), rotatePoint({ p1.x + lw, p1.y },m,f) , lw, color);
+}
+
+void s2d::S2DGraphics::drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw, S2D_COLOR color) {
+	if (lw <= 0.0f) lw = 1.0f;
+
+	drawLine(p1, p2, lw, color);
+	drawLine(p2, p3, lw, color);
+	drawLine(p3, p1, lw, color);
+}
+
+//void s2d::S2DGraphics::drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw, float fAngle, S2D_COLOR color) {
+//
+//
+//	Vec2f m1 = p2 - p1;
+//	Vec2f m2 = p3 - p2;
+//	Vec2f m3 = p1 - p3;
+//
+//	p1 = rotatePoint(p1, m1, fAngle);
+//	p2 = rotatePoint(p2, m2, fAngle);
+//	p3 = rotatePoint(p3, m3, fAngle);
+//
+//	drawWireFrameTriangle(p1, p2, p3, lw, color);
+//}
 
 
 

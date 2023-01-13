@@ -128,7 +128,7 @@ namespace s2d {
 		HDC						m_hdc;
 		HGLRC					m_hglrc;
 		MSG						m_msg;
-		s2d::MouseState			m_mouseState;
+		s2d::MouseState			m_mouseState = { 0, S2D_MOUSE_IDLE, {0,0} };
 		s2d::KeyState			m_keyState;
 		static S2DWindow*		m_wWindow;
 		static bool				m_bMouseDrag;

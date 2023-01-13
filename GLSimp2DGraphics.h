@@ -41,15 +41,13 @@
 /*
 * -------------------------------------------------------------------------------------
 * NOTES TO SELF/TO DO LIST: 
-*	-[NEED_TO_FIX/ABANDON]	drawNDC stuff are not working... maybe abandon this shit
-*	-[NEED_TO_FIX]			drawTriangle is not working properly with textures due to texture coords not setup properly
 *	-[ADDITION]				Need to implement a drawCircle (hooray cos/sin stuff again!)
+*	-[ADDITION]				Add the capability to draw String/characters/glyps, TrueType font
 *	-[DOCUMENTATION]		This project need some proper documentation
 *	-[ADDITION]				Add a bitmap Loader (S2DBitMap - GLSimp2DEXTBitMap)
-*	-[NEED_TO_FIX]			GetKey() you can only query one key at a time... need to fix that by using GetAsyncKeyState
 *	-[NEED_TO_FIX/ADDITION]	No implentation of handling when textures slots are all used - this might be quite a big issue
 *	-[NEED_TO_FIX]			The implementation of drawTriangle sucks as it basically draws two triangles...
-*	-[NEED_TO_FIX]			The IBO only accomodates rects thats why drawTriangle draws two triangles...
+*	-[OPTIMIZE]				The IBO only accomodates rects thats why drawTriangle draws two triangles...
 *	-[TEST/ADDITION]		Make test program to test some ligthing effects... or some shit like that
 *	-[MODIFICATION]			Maybe make the texture its own class instead of a struct
 *	-[OTHER]				Maybe make this a DLL or a static libraries?... Probably when a lot of things have been added
@@ -58,11 +56,6 @@
 
 
 namespace s2d {
-	
-
-	
-
-	
 	/*
 	* The graphics renderer
 	* 
@@ -76,7 +69,7 @@ namespace s2d {
 
 		/*
 		* Attach a texture to a texture slot in opengl
-		* @param pixels the pixel buffer which contains an RGA/A format
+		* @param pixels the pixel buffer which contains an RGB/A format
 		* @param width the width of the texture
 		* @param height the height of the texture
 		* @return texture slot/id for that texture
@@ -101,13 +94,13 @@ namespace s2d {
 		* @return - none
 		* 
 		*/
-		void drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color = PXLCLR_WHITE, Texture texture = {-1,0,0});
+		void drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color = PXLCLR_WHITE);
 		/*
 		* Draws a rectangle with the specified coordinates, size, color, and texture
 		* @param x, y - the coordinates in space where top left corner is 0,0
 		* @param width, height - width and height of the rectangle
 		* @param color - the color of the rectangle. Can be used to tint when texture is applied
-		* @param texture - the texture for the rectangle. Leave to default value when no texture are applied
+		
 		* @return - none
 		*/
 		void drawRect(F32 x, F32 y, F32 width, F32 height, S2D_COLOR color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
@@ -132,13 +125,81 @@ namespace s2d {
 		* Draws a rectangle with the specified coordinates, size, color, and texture
 		* @param rect - A rect structure that defines the coordinate,size, and texture
 		* @param fAngle - the angle of rotation
-		* @param color - the color of the rectangle. Can be used to tint when texture is applied
+		* @param color - the color of the rectangle. Can be used to tint when texture is applied(set to white by default)
 		* @return - none
 		*/
 		void drawRotatedRect(S2DRect rect, float fAnge, S2D_COLOR color = PXLCLR_WHITE);
-		void drawNDCRect(float x, float y, float w, float h, S2D_COLOR color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
-		void drawNDCRect(S2DRect rect, S2D_COLOR color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
 		
+		/*
+		* Draws a wireframe/unfilled circle in a specified location and radius.
+		* The parameter nSegmentCount cannot be less than 4. It will be automatically sets to 6 if less than 4 is inputted.
+		* The default segment count is 16
+		* 
+		* @param p1 - the position
+		* @param fRadius - the radius
+		* @param lw - the thickness of the line
+		* @color - the color(set to white by default)
+		* @nSegment - the number of segments the circle will composed of
+		*/
+		void drawWireFrameCircle(Point p1, float fRadius, float lw, S2D_COLOR color = PXLCLR_WHITE, uint32_t nSegmentCount = 16);
+		
+		/*
+		* Draws a filled circle in a specified location and radius.
+		* The parameter nSegmentCount cannot be less than 4. It will be automatically sets to 6 if less than 4 is inputted.
+		* The default segment count is 16
+		*
+		* @param p1 - the position
+		* @param fRadius - the radius
+		* @color - the color(set to white by default)
+		* @nSegment - the number of segments the circle will composed of
+		*/
+		void drawCircle(Point p1, float fRadius, S2D_COLOR color = PXLCLR_WHITE, uint32_t nSegmentCount = 16);
+		/*
+		* Draws a line specified by two points
+		* @param x1, y1 - The first point location
+		* @param x2, y2 - The 2nd point location
+		* @param w - the width/thickness of the line
+		* @param color - the color of the line(set to white by default)
+		*/
+		void drawLine(float x1, float y1, float x2, float y2, float w, S2D_COLOR color = PXLCLR_WHITE);
+		
+		/*
+		* Draws a line specified by two points
+		* @param p1 - The first point location
+		* @param p2 - The 2nd point location
+		* @param w - the width/thickness of the line
+		* @param color - the color of the line(set to white by default)
+		*/
+		void drawLine(Point p1, Point p2, float w, S2D_COLOR color = PXLCLR_WHITE);
+		
+		/*
+		* Draws a wireframe/unfilled rectangle
+		* @param pos - position of the rectangle
+		* @param sz - the width and height
+		* @param lw - the width/thickness of the lines
+		* @param color - the color(set to white by default)
+		*/
+		void drawWireFrameRect(Vec2f pos, Vec2f sz, float lw = 1, S2D_COLOR color = PXLCLR_WHITE);
+		/*
+		* Draws a wireframe/unfilled rectangle
+		* @param pos - position of the rectangle
+		* @param sz - the width and height
+		* @param lw - the width/thickness of the lines
+		* @param fAngle - the angle of rotation (set to zero by default)
+		* @param color - the color (set to white by default)
+		*/
+		void drawWireFrameRect(Vec2f pos, Vec2f sz, float lw = 1, float fAngle = 0, S2D_COLOR color = PXLCLR_WHITE);
+		/*
+		* Draws a triangle in specified by 3 points
+		* @param p1,p2,p3 - the three points/vertex of the triangle
+		* @param lw - the width/thickness of the line
+		* @param color - the color of the line default to white
+		* @return none
+		*/
+		void drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw = 1, S2D_COLOR color = PXLCLR_WHITE);
+		/*void drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw = 1, float fAngle = 0, S2D_COLOR color = PXLCLR_WHITE);*/
+
+
 		/*
 		* This is the actual draw call. This should be called once every frame as this flushes all
 		* draw*() stuff on the screen
@@ -166,7 +227,7 @@ namespace s2d {
 		S2DGraphics(UINT32 width, UINT32 height);
 		S2DGraphics();
 		S2DGraphics(S2DGraphics& copy);
-		S2DGraphics(S2DGraphics&& move);
+		S2DGraphics(S2DGraphics&& move) noexcept;
 		S2DGraphics(s2d::S2DWindow& window);
 		~S2DGraphics();
 		S2DGraphics& operator=(S2DGraphics&& move) noexcept;
@@ -187,7 +248,7 @@ namespace s2d {
 		RectIndexes*		m_indexRect;							// Index Buffer
 		Vertex*				m_vertices;								// Vertex Buffer
 
-		//void resizeRectCount();
+		
 		s2d::Vec2f normalizePoint(s2d::Vec2f point);
 
 
