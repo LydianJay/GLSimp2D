@@ -1,6 +1,44 @@
-
 #include "GLSimp2DGraphics.h"
 
+
+const static unsigned long long ___glyphdata[36] = { // what an actual abomination
+0b1110011111011011101111011011110110000001101111011011110110111101,
+0b1000011110111011101110111000001110111011101110111011101110000111,
+0b1110001111011111101111111011111110111111101111111101111111100011,
+0b1000011110111011101111011011110110111101101111011011101110000111,
+0b1000001110111111101111111000001110111111101111111011111110000011,
+0b1000001110111111101111111000011110111111101111111011111110111111,
+0b1100001110111101011111110111111101100001011111011011110111000011,
+0b1011110110111101101111011000000110111101101111011011110110111101,
+0b1000001111101111111011111110111111101111111011111110111110000011,
+0b1100000111110111111101111111011111110111011101111011011111001111,
+0b1011101110110111101011111001111110011111101011111011011110111011,
+0b1011111110111111101111111011111110111111101111111011111110000111,
+0b0111110100111001010101010110110101111101011111010111110101111101,
+0b1011110110011101101011011010110110110101101101011011100110111101,
+0b1110011111011011101111011011110110111101101111011101101111100111,
+0b1000011110111011101110111011101110000111101111111011111110111111,
+0b1110011111011011101111011011110110101101101101011101101111100101,
+0b1000011110111011101110111011011110001111101101111011101110111011,
+0b1100011110111011101111111000011111111011111110111011101111000111,
+0b0000000111101111111011111110111111101111111011111110111111101111,
+0b0111110101111101011111010111110101111101011111010111110110000011,
+0b0111110101111101011111011011101110111011101110111101011111101111,
+0b0111110101111101011111010110110101101101011011010101010110111011,
+0b0111111010111101110110111110011111100111110110111011110101111110,
+0b0111110101111101101110111101011111101111111011111110111111101111,
+0b0000000111111101111110111110011111011111101111110111111100000001,
+0b1100001110111101101111011011110110111101101111011011110111000011,
+0b1100111110101111111011111110111111101111111011111110111110000011,
+0b1100011110111011111110111111011111001111101111111011111110000011,
+0b1100011111111011111110111100011111111011111110111111101111000111,
+0b1101101111011011110110111100001111111011111110111111101111111011,
+0b1000001110111111101111111000001111111011111110111011101111000111,
+0b1000001110111111101111111000001110111011101110111011101110000011,
+0b1000011111110111111101111111011111000011111101111111011111110111,
+0b1000000110111101101111011000000110111101101111011011110110000001,
+0b1000001110111011101110111000001111111011111110111111101111111011,
+};
 
 s2d::S2DGraphics::S2DGraphics(UINT32 width, UINT32 height) {
 	if (!LoadGL())return;
@@ -140,6 +178,7 @@ s2d::S2DGraphics::S2DGraphics(UINT32 width, UINT32 height) {
 		wglSwapIntervalEXT(0);
 
 	
+
 }
 
 s2d::S2DGraphics::S2DGraphics() :S2DGraphics(50, 50) {}
@@ -155,7 +194,8 @@ s2d::S2DGraphics::S2DGraphics(S2DGraphics& copy){
 	m_glUniformLoc		= copy.m_glUniformLoc;
 	m_scrHeight			= copy.m_scrHeight;
 	m_scrWidth			= copy.m_scrWidth;
-
+	m_glyphTexture = copy.m_glyphTexture;
+	m_glyphs = copy.m_glyphs;
 
 	m_textureSlot.count = copy.m_textureSlot.count;
 	m_textureSlot.maxCount = copy.m_textureSlot.maxCount;
@@ -182,6 +222,8 @@ s2d::S2DGraphics::S2DGraphics(S2DGraphics&& move) noexcept{
 	m_vertices				= move.m_vertices;
 	m_indexRect				= move.m_indexRect;
 	m_vertexIndexCount		= move.m_vertexIndexCount;
+	m_glyphTexture = move.m_glyphTexture;
+	m_glyphs = move.m_glyphs;
 	move.m_textureSlot.texID = nullptr;
 	move.m_vertices = nullptr;
 	move.m_indexRect = nullptr;
@@ -220,6 +262,8 @@ s2d::S2DGraphics& s2d::S2DGraphics::operator=(S2DGraphics&& move) noexcept
 	m_scrWidth				= move.m_scrWidth;
 	m_textureSlot			= move.m_textureSlot;
 	m_vertices				= move.m_vertices;
+	m_glyphTexture			= move.m_glyphTexture;
+	m_glyphs				= move.m_glyphs;
 	m_indexRect = move.m_indexRect;
 	m_vertexIndexCount = move.m_vertexIndexCount;
 	move.m_textureSlot.texID = nullptr;
@@ -241,11 +285,11 @@ s2d::Texture s2d::S2DGraphics::createTexture(unsigned char* pixels, int width, i
 	
 	glActiveTexture(GL_TEXTURE0 + m_textureSlot.count);
 	glBindTexture(GL_TEXTURE_2D, m_textureSlot.texID[index]);
-
+	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	m_textureSlot.count++;
 
@@ -271,7 +315,7 @@ void s2d::S2DGraphics::setBlendingState(bool state) {
 }
 
 // Not working with textures
-void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color){
+void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, Color color){
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
 	UINT32 index = m_vertexCount;
 	Point normalP1 = { (float)((float)(p1.x / (float)m_scrWidth) * 2) - 1, (float)((float)(p1.y / (float)m_scrWidth) * 2) - 1 };
@@ -288,10 +332,56 @@ void s2d::S2DGraphics::drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR colo
 }
 
 
+void s2d::S2DGraphics::drawString(const char* str, float x, float y, float w, float h, float angle) {
+	int i = 0;
+	int step = 0;
+	int j = 0;
+	int row = m_glyphs.getColCount() - 1;
+
+	while (str[i] != '\0') {
 
 
+		unsigned int index = 0;
+		
+		if (str[i] >= 'A' && str[i] <= 'Z') {
+			index = row - (str[i] - 'A');
+		}
+		else if (str[i] >= 'a' && str[i] <= 'z') {
+			index = row - (str[i] - 'a');
+		}
+		else if (str[i] >= '0' && str[i] <= '1') {
+			index = row - (str[i] - '0');
+		}
+		else if (str[i] == ' ') {
+			step++;
+			i++;
+			continue;
+		}
+		else if (str[i] == '\n') {
+			j++;
+			step = 0;
+			i++;
+			continue;
+		}
+		else {
+			step++;
+			i++;
+			continue;
+		}
+		
+		drawRotatedRect(x + (w * step), y + (h * j), w, h, angle, s2d::PXLCLR_WHITE, m_glyphs.getTexture(index));
+		i++;
+		step++;
+	}
 
-void s2d::S2DGraphics::drawRect(F32 x, F32 y, F32 width, F32 height, S2D_COLOR color, Texture texture)
+}
+
+void s2d::S2DGraphics::drawString(std::string str, float x, float y, float w, float h, float angle) {
+	drawString(str.c_str(), x, y, w, h, angle);
+}
+
+
+void s2d::S2DGraphics::drawRect(F32 x, F32 y, F32 width, F32 height, Color color, Texture texture)
 {
 	
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
@@ -333,7 +423,51 @@ s2d::Vec2f s2d::S2DGraphics::normalizePoint(s2d::Vec2f point) {
 	return { ( point.x / (float)m_scrWidth * 2.0f) - 1.0f,(point.y / (float)m_scrHeight * 2.0f) - 1.0f };
 }
 
-void s2d::S2DGraphics::drawRect(S2DRect rect, S2D_COLOR color) {
+void s2d::S2DGraphics::initGlyphs(s2d::Color foregrnd, s2d::Color backgrnd) {
+
+	unsigned int w = 8, h = 8, glyphCount = 36;
+	unsigned int* colorData = new unsigned int[w * h * glyphCount];
+	unsigned const long long* b = ___glyphdata;
+	
+	unsigned int foreGroundColor = foregrnd.A;
+	foreGroundColor <<= 8;
+	foreGroundColor |= foregrnd.R; foreGroundColor <<= 8;
+	foreGroundColor |= foregrnd.G; foreGroundColor <<= 8;
+	foreGroundColor |= foregrnd.B;
+
+	unsigned int backGroundColor = backgrnd.A;
+	backGroundColor <<= 8;
+	backGroundColor |= backgrnd.B; backGroundColor <<= 8;
+	backGroundColor |= backgrnd.G; backGroundColor <<= 8;
+	backGroundColor |= backgrnd.R;
+
+
+	for (int i = 0; i < glyphCount; i++) {
+		unsigned long long shifter = 0b1000000000000000000000000000000000000000000000000000000000000000;
+
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
+
+				unsigned long long res = b[i] & shifter;
+				if (res == 0) {
+					colorData[x + (y + (i * h)) * 8] = foreGroundColor;
+				}
+				else {
+					colorData[x + (y + (i * h)) * 8] = backGroundColor;
+				}
+				shifter >>= 1;
+			}
+		}
+
+	}
+
+	m_glyphTexture = createTexture((unsigned char*)colorData, w, glyphCount * h);
+	m_glyphs.createSpriteSheet(m_glyphTexture, 8, 8);
+	delete[] colorData;
+
+}
+
+void s2d::S2DGraphics::drawRect(S2DRect rect, Color color) {
 	s2d::Vec4f v = rect.getRect();
 	drawRect(v.x, v.y, v.z, v.w, color, rect.getTexture());
 }
@@ -347,7 +481,7 @@ s2d::Vec2f s2d::S2DGraphics::rotatePoint(s2d::Vec2f point, s2d::Vec2f m, float f
 
 }
 
-void s2d::S2DGraphics::drawRotatedRect(F32 x, F32 y, F32 width, F32 height, float fAngle, S2D_COLOR color, Texture texture) {
+void s2d::S2DGraphics::drawRotatedRect(F32 x, F32 y, F32 width, F32 height, float fAngle, Color color, Texture texture) {
 
 	
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
@@ -403,7 +537,7 @@ void s2d::S2DGraphics::drawRotatedRect(F32 x, F32 y, F32 width, F32 height, floa
 
 }
 
-void s2d::S2DGraphics::drawRotatedRect(S2DRect rect, float fAnge, S2D_COLOR color) {
+void s2d::S2DGraphics::drawRotatedRect(S2DRect rect, float fAnge, Color color) {
 
 	Vec4f pos = rect.getRect();
 
@@ -411,7 +545,7 @@ void s2d::S2DGraphics::drawRotatedRect(S2DRect rect, float fAnge, S2D_COLOR colo
 
 }
 
-void s2d::S2DGraphics::drawWireFrameCircle(Point p1, float fRadius, float lw, S2D_COLOR color, uint32_t nSegmentCount) {
+void s2d::S2DGraphics::drawWireFrameCircle(Point p1, float fRadius, float lw, Color color, uint32_t nSegmentCount) {
 
 	
 	float p = (3.14159f * 2.0f) / (float)nSegmentCount;
@@ -426,7 +560,7 @@ void s2d::S2DGraphics::drawWireFrameCircle(Point p1, float fRadius, float lw, S2
 
 }
 
-void s2d::S2DGraphics::drawCircle(Point p1, float fRadius, S2D_COLOR color, uint32_t nSegmentCount) {
+void s2d::S2DGraphics::drawCircle(Point p1, float fRadius, Color color, uint32_t nSegmentCount) {
 
 
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
@@ -465,7 +599,7 @@ void s2d::S2DGraphics::drawCircle(Point p1, float fRadius, S2D_COLOR color, uint
 	m_vertexIndexCount += (nSegmentCount / 2) * 6;
 }
 
-void s2d::S2DGraphics::drawLine(float x1, float y1, float x2, float y2, float w, S2D_COLOR color) {
+void s2d::S2DGraphics::drawLine(float x1, float y1, float x2, float y2, float w, Color color) {
 
 	if (m_vertexCount >= m_maxVertexCount - 1) reservedMaxRect(m_maxVertexCount + 32 * 4);
 	float fR = (float)color.R / 255, fG = (float)color.G / 255, fB = (float)color.B / 255, fA = (float)color.A / 255;
@@ -496,12 +630,12 @@ void s2d::S2DGraphics::drawLine(float x1, float y1, float x2, float y2, float w,
 
 }
 
-void s2d::S2DGraphics::drawLine(Point p1, Point p2, float w, S2D_COLOR color) {
+void s2d::S2DGraphics::drawLine(Point p1, Point p2, float w, Color color) {
 	if (w <= 0.0f) w = 1.0f;
 	drawLine(p1.x, p1.y, p2.x, p2.y, w, color);
 }
 
-void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, S2D_COLOR color) {
+void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, Color color) {
 	if (lw <= 0.0f) lw = 1.0f;
 	Point p1 = pos;
 	Point p2 = { pos.x + sz.x, pos.y };
@@ -514,7 +648,7 @@ void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, S2D_COLO
 	drawLine({ p3.x + lw, p3.y }, { p1.x + lw, p1.y }, lw, color);
 }
 
-void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, float f, S2D_COLOR color) {
+void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, float f, Color color) {
 	if (lw <= 0.0f) lw = 1.0f;
 	Point p1 = pos;
 	Point p2 = { pos.x + sz.x, pos.y };
@@ -528,7 +662,7 @@ void s2d::S2DGraphics::drawWireFrameRect(Vec2f pos, Vec2f sz, float lw, float f,
 	drawLine( rotatePoint({ p3.x + lw, p3.y }, m, f), rotatePoint({ p1.x + lw, p1.y },m,f) , lw, color);
 }
 
-void s2d::S2DGraphics::drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw, S2D_COLOR color) {
+void s2d::S2DGraphics::drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw, Color color) {
 	if (lw <= 0.0f) lw = 1.0f;
 
 	drawLine(p1, p2, lw, color);

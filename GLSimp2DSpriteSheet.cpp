@@ -90,7 +90,7 @@ const s2d::Texture& s2d::S2DSpriteSheet::getTexture(UINT32 index, bool isFlipped
     // row = t mod maxRow
     if (index >= m_texCount)index = m_texCount - 1;
     
-    int row = (index % m_rowCount), col;
+    unsigned int row = (index % m_rowCount), col;
     col = (index - row) / m_rowCount;
 
 

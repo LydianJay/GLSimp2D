@@ -1,5 +1,5 @@
 #pragma once
-
+#include <vector>
 
 /*
 * NOTES TO SELF:
@@ -21,18 +21,29 @@ namespace s2d {
 	typedef double					FLOAT64;
 	typedef int						TEXID;
 
-	struct S2D_COLOR {
+	struct Color {
 		UINT8	R;
 		UINT8	G;
 		UINT8	B;
 		UINT8	A;
 	};
 
-	constexpr S2D_COLOR PXLCLR_BLUE = { 0, 0, 255, 255};
-	constexpr S2D_COLOR PXLCLR_RED =	{ 255, 0, 0, 255 };
-	constexpr S2D_COLOR PXLCLR_GREEN = { 0, 255, 0, 255 };
-	constexpr S2D_COLOR PXLCLR_WHITE = { 255, 255, 255, 255 };
-	constexpr S2D_COLOR PXLCLR_BLACK = { 0, 0, 0, 255 };
+	struct Glyph {
+		Color color;
+		unsigned int texIdx;
+	};
+	
+	struct String {
+		UINT64 bitIndex;
+		Color color;
+		float x, y, w, h;
+	};
+
+	constexpr Color PXLCLR_BLUE = { 0, 0, 255, 255};
+	constexpr Color PXLCLR_RED =	{ 255, 0, 0, 255 };
+	constexpr Color PXLCLR_GREEN = { 0, 255, 0, 255 };
+	constexpr Color PXLCLR_WHITE = { 255, 255, 255, 255 };
+	constexpr Color PXLCLR_BLACK = { 0, 0, 0, 255 };
 	struct Point;
 	struct Vec2f {
 		F32 x, y;
