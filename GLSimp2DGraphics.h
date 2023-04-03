@@ -94,7 +94,7 @@ namespace s2d {
 		* @return - none
 		* 
 		*/
-		void drawTriangle(Point p1, Point p2, Point p3, S2D_COLOR color = PXLCLR_WHITE);
+		void drawTriangle(Point p1, Point p2, Point p3, Color color = PXLCLR_WHITE);
 		/*
 		* Draws a rectangle with the specified coordinates, size, color, and texture
 		* @param x, y - the coordinates in space where top left corner is 0,0
@@ -103,14 +103,19 @@ namespace s2d {
 		
 		* @return - none
 		*/
-		void drawRect(F32 x, F32 y, F32 width, F32 height, S2D_COLOR color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
+
+
+		void drawString(const char* str, float x, float y, float w, float h, float angle = 0.0f);
+		void drawString(std::string str, float x, float y, float w, float h, float angle = 0.0f);
+		
+		void drawRect(F32 x, F32 y, F32 width, F32 height, Color color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
 		/*
 		* Draws a rectangle with the specified coordinates, size, color, and texture
 		* @param rect - A rect structure that defines the coordinate,size, and texture
 		* @param color - the color of the rectangle. Can be used to tint when texture is applied
 		* @return - none
 		*/
-		void drawRect(S2DRect rect, S2D_COLOR color = PXLCLR_WHITE);
+		void drawRect(S2DRect rect, Color color = PXLCLR_WHITE);
 		/*
 		* Draws a rectangle with the specified coordinates, size, color, rotation, and texture
 		* @param x, y - the coordinates in space where top left corner is 0,0
@@ -120,7 +125,7 @@ namespace s2d {
 		* @param texture - the texture for the rectangle. Leave to default value when no texture are applied
 		* @return - none
 		*/
-		void drawRotatedRect(F32 x, F32 y, F32 width, F32 height, float fAngle, S2D_COLOR color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
+		void drawRotatedRect(F32 x, F32 y, F32 width, F32 height, float fAngle, Color color = PXLCLR_WHITE, Texture texture = { -1,0,0 });
 		/*
 		* Draws a rectangle with the specified coordinates, size, color, and texture
 		* @param rect - A rect structure that defines the coordinate,size, and texture
@@ -128,7 +133,7 @@ namespace s2d {
 		* @param color - the color of the rectangle. Can be used to tint when texture is applied(set to white by default)
 		* @return - none
 		*/
-		void drawRotatedRect(S2DRect rect, float fAnge, S2D_COLOR color = PXLCLR_WHITE);
+		void drawRotatedRect(S2DRect rect, float fAnge, Color color = PXLCLR_WHITE);
 		
 		/*
 		* Draws a wireframe/unfilled circle in a specified location and radius.
@@ -141,7 +146,7 @@ namespace s2d {
 		* @color - the color(set to white by default)
 		* @nSegment - the number of segments the circle will composed of
 		*/
-		void drawWireFrameCircle(Point p1, float fRadius, float lw, S2D_COLOR color = PXLCLR_WHITE, uint32_t nSegmentCount = 16);
+		void drawWireFrameCircle(Point p1, float fRadius, float lw, Color color = PXLCLR_WHITE, uint32_t nSegmentCount = 16);
 		
 		/*
 		* Draws a filled circle in a specified location and radius.
@@ -153,7 +158,7 @@ namespace s2d {
 		* @color - the color(set to white by default)
 		* @nSegment - the number of segments the circle will composed of
 		*/
-		void drawCircle(Point p1, float fRadius, S2D_COLOR color = PXLCLR_WHITE, uint32_t nSegmentCount = 16);
+		void drawCircle(Point p1, float fRadius, Color color = PXLCLR_WHITE, uint32_t nSegmentCount = 16);
 		/*
 		* Draws a line specified by two points
 		* @param x1, y1 - The first point location
@@ -161,7 +166,7 @@ namespace s2d {
 		* @param w - the width/thickness of the line
 		* @param color - the color of the line(set to white by default)
 		*/
-		void drawLine(float x1, float y1, float x2, float y2, float w, S2D_COLOR color = PXLCLR_WHITE);
+		void drawLine(float x1, float y1, float x2, float y2, float w, Color color = PXLCLR_WHITE);
 		
 		/*
 		* Draws a line specified by two points
@@ -170,7 +175,7 @@ namespace s2d {
 		* @param w - the width/thickness of the line
 		* @param color - the color of the line(set to white by default)
 		*/
-		void drawLine(Point p1, Point p2, float w, S2D_COLOR color = PXLCLR_WHITE);
+		void drawLine(Point p1, Point p2, float w, Color color = PXLCLR_WHITE);
 		
 		/*
 		* Draws a wireframe/unfilled rectangle
@@ -179,7 +184,7 @@ namespace s2d {
 		* @param lw - the width/thickness of the lines
 		* @param color - the color(set to white by default)
 		*/
-		void drawWireFrameRect(Vec2f pos, Vec2f sz, float lw = 1, S2D_COLOR color = PXLCLR_WHITE);
+		void drawWireFrameRect(Vec2f pos, Vec2f sz, float lw = 1, Color color = PXLCLR_WHITE);
 		/*
 		* Draws a wireframe/unfilled rectangle
 		* @param pos - position of the rectangle
@@ -188,7 +193,7 @@ namespace s2d {
 		* @param fAngle - the angle of rotation (set to zero by default)
 		* @param color - the color (set to white by default)
 		*/
-		void drawWireFrameRect(Vec2f pos, Vec2f sz, float lw = 1, float fAngle = 0, S2D_COLOR color = PXLCLR_WHITE);
+		void drawWireFrameRect(Vec2f pos, Vec2f sz, float lw = 1, float fAngle = 0, Color color = PXLCLR_WHITE);
 		/*
 		* Draws a triangle in specified by 3 points
 		* @param p1,p2,p3 - the three points/vertex of the triangle
@@ -196,7 +201,7 @@ namespace s2d {
 		* @param color - the color of the line default to white
 		* @return none
 		*/
-		void drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw = 1, S2D_COLOR color = PXLCLR_WHITE);
+		void drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw = 1, Color color = PXLCLR_WHITE);
 		/*void drawWireFrameTriangle(Point p1, Point p2, Point p3, float lw = 1, float fAngle = 0, S2D_COLOR color = PXLCLR_WHITE);*/
 
 
@@ -224,6 +229,8 @@ namespace s2d {
 		void reservedMaxRect(uint32_t count);
 
 
+		void initGlyphs(Color foregrnd, Color backgrnd);
+
 		S2DGraphics(UINT32 width, UINT32 height);
 		S2DGraphics();
 		S2DGraphics(S2DGraphics& copy);
@@ -242,7 +249,8 @@ namespace s2d {
 		UINT32				m_maxVertexCount;						
 		UINT32				m_vertexIndexCount;
 		INT32				m_maxTextureSlot;						// currently useless
-
+		Texture				m_glyphTexture;							// glyphtexture
+		S2DSpriteSheet		m_glyphs;
 		INT32				m_glUniformLoc;							
 		TextureContext		m_textureSlot;
 		RectIndexes*		m_indexRect;							// Index Buffer
@@ -250,7 +258,7 @@ namespace s2d {
 
 		
 		s2d::Vec2f normalizePoint(s2d::Vec2f point);
-
+		
 
 		/*
 		* Rotates a point in screen
@@ -261,7 +269,7 @@ namespace s2d {
 		* 
 		*/
 		static s2d::Vec2f rotatePoint(s2d::Vec2f point, s2d::Vec2f m, float fAngle);
-		
+	
 	};
 
 
